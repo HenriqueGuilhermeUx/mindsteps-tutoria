@@ -145,7 +145,7 @@ router.post('/study/sendMessage', async (req, res) => {
 router.get('/study/history/:sessionId', async (req, res) => {
   try {
     const { sessionId } = req.params
-    const messages = await getSessionMessages(parseInt(sessionId))
+    const messages = await getSessionMessages(sessionId)
 
     res.json({
       messages: messages.map(m => ({

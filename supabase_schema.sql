@@ -1,18 +1,27 @@
--- MindSteps Database Schema
+-- MindSteps Database Schema - Versão UUID (Supabase Compatible)
 -- Run this in Supabase SQL Editor
 
--- Users table
-CREATE TABLE IF NOT EXISTS users (
-  id SERIAL PRIMARY KEY,
+-- ============================================
+-- EXTENSÃO UUID
+-- ============================================
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- ============================================
+-- TABELAS PRINCIPAIS
+-- ============================================
+
+-- Users table (usa UUID como padrão do Supabase)
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Student profiles
-CREATE TABLE IF NOT EXISTS student_profiles (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+CREATE TABLE student_profiles (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   age_group TEXT NOT NULL DEFAULT '11-14',
   grade TEXT DEFAULT '6',
@@ -28,9 +37,9 @@ CREATE TABLE IF NOT EXISTS student_profiles (
 );
 
 -- Study sessions
-CREATE TABLE IF NOT EXISTS study_sessions (
-  id SERIAL PRIMARY KEY,
-  profile_id INTEGER REFERENCES student_profiles(id) ON DELETE CASCADE,
+CREATE TABLE study_sessions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  profile_id UUID NOT NULL REFERENCES student_profiles(id) ON DELETE CASCADE,
   tutor_id TEXT DEFAULT 'default',
   subject TEXT DEFAULT 'geral',
   started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -38,64 +47,41 @@ CREATE TABLE IF NOT EXISTS study_sessions (
 );
 
 -- Chat messages
-CREATE TABLE IF NOT EXISTS chat_messages (
-  id SERIAL PRIMARY KEY,
-  session_id INTEGER REFERENCES study_sessions(id) ON DELETE CASCADE,
+CREATE TABLE chat_messages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  session_id UUID NOT NULL REFERENCES study_sessions(id) ON DELETE CASCADE,
   role TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
   content TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Daily usage tracking
-CREATE TABLE IF NOT EXISTS daily_usage (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+CREATE TABLE daily_usage (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   date DATE NOT NULL,
   message_count INTEGER DEFAULT 0,
   UNIQUE(user_id, date)
 );
 
--- Indexes
-CREATE INDEX IF NOT EXISTS idx_profiles_user_id ON student_profiles(user_id);
-CREATE INDEX IF NOT EXISTS idx_sessions_profile_id ON study_sessions(profile_id);
-CREATE INDEX IF NOT EXISTS idx_messages_session_id ON chat_messages(session_id);
-CREATE INDEX IF NOT EXISTS idx_usage_user_date ON daily_usage(user_id, date);
+-- ============================================
+-- ÍNDICES PARA PERFORMANCE
+-- ============================================
 
--- Enable Row Level Security (RLS)
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE student_profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE study_sessions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
-ALTER TABLE daily_usage ENABLE ROW LEVEL SECURITY;
+CREATE INDEX idx_profiles_user_id ON student_profiles(user_id);
+CREATE INDEX idx_sessions_profile_id ON study_sessions(profile_id);
+CREATE INDEX idx_messages_session_id ON chat_messages(session_id);
+CREATE INDEX idx_usage_user_date ON daily_usage(user_id, date);
 
--- RLS Policies (users can only access their own data)
-CREATE POLICY "Users can access own data" ON users
-  FOR ALL USING (auth.uid()::integer = id);
+-- ============================================
+-- Row Level Security (DESABILITADO para JWT custom)
+-- ============================================
+-- A segurança é garantida pelo middleware JWT no backend Node.js
 
-CREATE POLICY "Users can access own profile" ON student_profiles
-  FOR ALL USING (auth.uid()::integer = user_id);
+-- ============================================
+-- VERIFICAÇÃO
+-- ============================================
 
-CREATE POLICY "Users can access own sessions" ON study_sessions
-  FOR ALL USING (
-    profile_id IN (SELECT id FROM student_profiles WHERE user_id = auth.uid()::integer)
-  );
-
-CREATE POLICY "Users can access own messages" ON chat_messages
-  FOR ALL USING (
-    session_id IN (
-      SELECT s.id FROM study_sessions s
-      JOIN student_profiles p ON s.profile_id = p.id
-      WHERE p.user_id = auth.uid()::integer
-    )
-  );
-
-CREATE POLICY "Users can access own usage" ON daily_usage
-  FOR ALL USING (auth.uid()::integer = user_id);
-
--- For development/testing without Supabase Auth, use this instead:
--- Disable RLS for now (enable after setting up Supabase Auth)
-ALTER TABLE users DISABLE ROW LEVEL SECURITY;
-ALTER TABLE student_profiles DISABLE ROW LEVEL SECURITY;
-ALTER TABLE study_sessions DISABLE ROW LEVEL SECURITY;
-ALTER TABLE chat_messages DISABLE ROW LEVEL SECURITY;
-ALTER TABLE daily_usage DISABLE ROW LEVEL SECURITY;
+SELECT table_name FROM information_schema.tables
+WHERE table_schema = 'public'
+AND table_name IN ('users', 'student_profiles', 'study_sessions', 'chat_messages', 'daily_usage');

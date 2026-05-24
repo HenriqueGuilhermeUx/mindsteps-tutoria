@@ -5,17 +5,17 @@ const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANO
 
 export const supabase = createClient(supabaseUrl, supabaseKey)
 
-// Database types
+// Database types (UUID compatible)
 export interface User {
-  id: number
+  id: string
   email: string
   password_hash: string
   created_at: string
 }
 
 export interface StudentProfile {
-  id: number
-  user_id: number
+  id: string
+  user_id: string
   name: string
   age_group: '6-10' | '11-14' | '15-17'
   grade: string
@@ -31,8 +31,8 @@ export interface StudentProfile {
 }
 
 export interface StudySession {
-  id: number
-  profile_id: number
+  id: string
+  profile_id: string
   tutor_id: string
   subject: string
   started_at: string
@@ -40,16 +40,16 @@ export interface StudySession {
 }
 
 export interface ChatMessage {
-  id: number
-  session_id: number
+  id: string
+  session_id: string
   role: 'user' | 'assistant'
   content: string
   created_at: string
 }
 
 export interface DailyUsage {
-  id: number
-  user_id: number
+  id: string
+  user_id: string
   date: string
   message_count: number
 }
@@ -66,7 +66,7 @@ export async function getUserByEmail(email: string) {
   return data as User
 }
 
-export async function getUserById(id: number) {
+export async function getUserById(id: string) {
   const { data, error } = await supabase
     .from('users')
     .select('*')
@@ -88,7 +88,7 @@ export async function createUser(email: string, passwordHash: string) {
   return data as User
 }
 
-export async function getProfileByUserId(userId: number) {
+export async function getProfileByUserId(userId: string) {
   const { data, error } = await supabase
     .from('student_profiles')
     .select('*')
@@ -99,7 +99,7 @@ export async function getProfileByUserId(userId: number) {
   return data as StudentProfile
 }
 
-export async function createProfile(userId: number, name: string, ageGroup: string, grade: string) {
+export async function createProfile(userId: string, name: string, ageGroup: string, grade: string) {
   const { data, error } = await supabase
     .from('student_profiles')
     .insert({
@@ -120,7 +120,7 @@ export async function createProfile(userId: number, name: string, ageGroup: stri
   return data as StudentProfile
 }
 
-export async function updateProfile(userId: number, updates: Partial<StudentProfile>) {
+export async function updateProfile(userId: string, updates: Partial<StudentProfile>) {
   const { data, error } = await supabase
     .from('student_profiles')
     .update(updates)
@@ -132,7 +132,7 @@ export async function updateProfile(userId: number, updates: Partial<StudentProf
   return data as StudentProfile
 }
 
-export async function createSession(profileId: number, tutorId: string) {
+export async function createSession(profileId: string, tutorId: string) {
   const { data, error } = await supabase
     .from('study_sessions')
     .insert({
@@ -147,7 +147,7 @@ export async function createSession(profileId: number, tutorId: string) {
   return data as StudySession
 }
 
-export async function endSession(sessionId: number) {
+export async function endSession(sessionId: string) {
   const { error } = await supabase
     .from('study_sessions')
     .update({ ended_at: new Date().toISOString() })
@@ -156,7 +156,7 @@ export async function endSession(sessionId: number) {
   if (error) throw new Error(error.message)
 }
 
-export async function saveMessage(sessionId: number, role: 'user' | 'assistant', content: string) {
+export async function saveMessage(sessionId: string, role: 'user' | 'assistant', content: string) {
   const { data, error } = await supabase
     .from('chat_messages')
     .insert({
@@ -171,7 +171,7 @@ export async function saveMessage(sessionId: number, role: 'user' | 'assistant',
   return data as ChatMessage
 }
 
-export async function getSessionMessages(sessionId: number) {
+export async function getSessionMessages(sessionId: string) {
   const { data, error } = await supabase
     .from('chat_messages')
     .select('*')
@@ -182,7 +182,7 @@ export async function getSessionMessages(sessionId: number) {
   return data as ChatMessage[]
 }
 
-export async function getTodayUsage(userId: number) {
+export async function getTodayUsage(userId: string) {
   const today = new Date().toISOString().split('T')[0]
 
   const { data, error } = await supabase
@@ -196,7 +196,7 @@ export async function getTodayUsage(userId: number) {
   return data as DailyUsage | null
 }
 
-export async function incrementUsage(userId: number) {
+export async function incrementUsage(userId: string) {
   const today = new Date().toISOString().split('T')[0]
 
   const { data: existing } = await supabase
@@ -226,7 +226,7 @@ export async function incrementUsage(userId: number) {
   }
 }
 
-export async function addXP(userId: number, amount: number) {
+export async function addXP(userId: string, amount: number) {
   const profile = await getProfileByUserId(userId)
   if (!profile) throw new Error('Profile not found')
 
