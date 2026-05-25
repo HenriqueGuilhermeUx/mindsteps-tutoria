@@ -61,6 +61,12 @@ export const studyApi = {
       body: { sessionId, content, subject },
     }),
 
+  getHint: (sessionId: string) =>
+    request<{ hint: string }>('/api/study/hint', {
+      method: 'POST',
+      body: { sessionId },
+    }),
+
   getHistory: (sessionId: string) =>
     request<{ messages: Array<{ role: string; content: string; createdAt: string }> }>(`/api/study/history?sessionId=${sessionId}`),
 

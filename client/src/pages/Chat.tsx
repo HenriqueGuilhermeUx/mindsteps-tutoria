@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { useAuthStore, useChatStore, useUsageStore } from '@/stores'
 import { studyApi, usageApi } from '@/lib/api'
 import { cn, formatXP, getLevelTitle, getXPProgress, getPetEmoji, getPetStage } from '@/lib/utils'
-import { Send, Mic, MicOff, Loader2, Sparkles, Flame, Zap, MessageCircle, ChevronDown } from 'lucide-react'
+import { Send, Mic, MicOff, Loader2, Sparkles, Zap, MessageCircle, ChevronDown, Lightbulb } from 'lucide-react'
 
 const SUBJECTS = [
   { id: 'geral', label: 'Geral', emoji: '🌟' },
@@ -26,11 +26,13 @@ const SUGGESTED_TOPICS = [
 export function ChatPage() {
   const navigate = useNavigate()
   const { profile, addXP, isAuthenticated } = useAuthStore()
-  const { messages, isLoading, setLoading, addMessage, clearChat, subject, setSubject } = useChatStore()
-  const { messagesRemaining, setUsage } = useUsageStore()
+  const { messages, isLoading, setLoading, addMessage, clearChat, subject, setSubject, sessionId, setSessionId } = useChatStore()
   const [input, setInput] = useState('')
   const [showSubjects, setShowSubjects] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
+  const [showHint, setShowHint] = useState(false)
+  const [hintLoading, setHintLoading] = useState(false)
+  const [currentHint, setCurrentHint] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -41,27 +43,37 @@ export function ChatPage() {
     }
   }, [isAuthenticated, navigate])
 
-  // Load usage on mount
-  useEffect(() => {
-    usageApi.check().then((data) => {
-      setUsage(data.remaining, data.limit)
-    }).catch(() => {
-      // Use defaults if API fails
-    })
-  }, [setUsage])
-
   // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  }, [messages, currentHint])
 
   // Focus input on mount
   useEffect(() => {
     inputRef.current?.focus()
   }, [])
 
+  const handleGetHint = async () => {
+    if (!sessionId || hintLoading) return
+
+    setHintLoading(true)
+    setShowHint(true)
+
+    try {
+      const response = await studyApi.getHint(sessionId)
+      setCurrentHint(response.hint)
+    } catch (error) {
+      setCurrentHint('Que tal pensar sobre isso de outra forma? Às vezes um exemplo do cotidiano ajuda!')
+    } finally {
+      setHintLoading(false)
+    }
+  }
+
   const handleSend = async () => {
-    if (!input.trim() || isLoading || messagesRemaining <= 0) return
+    if (!input.trim() || isLoading) return
+
+    setShowHint(false)
+    setCurrentHint('')
 
     const userMessage = input.trim()
     setInput('')
@@ -77,15 +89,15 @@ export function ChatPage() {
 
     try {
       // Start session if needed
-      let sessionId = useChatStore.getState().sessionId
-      if (!sessionId) {
+      let currentSessionId = sessionId
+      if (!currentSessionId) {
         const session = await studyApi.startSession(profile?.tutorId || 'default')
-        useChatStore.getState().setSessionId(session.sessionId)
-        sessionId = session.sessionId
+        setSessionId(session.sessionId)
+        currentSessionId = session.sessionId
       }
 
       // Send message
-      const response = await studyApi.sendMessage(sessionId!, userMessage)
+      const response = await studyApi.sendMessage(currentSessionId!, userMessage, subject)
 
       // Add assistant message
       addMessage({
@@ -97,12 +109,9 @@ export function ChatPage() {
 
       // Add XP
       addXP(response.xpEarned)
-      setUsage(messagesRemaining - 1, 5)
 
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Erro ao enviar mensagem')
-      // Remove the user message if the request failed
-      useChatStore.getState().setMessages(messages)
     } finally {
       setLoading(false)
     }
@@ -202,6 +211,16 @@ export function ChatPage() {
             >
               <MessageCircle className="w-5 h-5" />
             </button>
+
+            {/* Hint Button */}
+            <button
+              onClick={handleGetHint}
+              disabled={!sessionId || messages.length === 0 || hintLoading}
+              className="btn-ghost p-2 flex items-center gap-1 text-amber-600 hover:bg-amber-50"
+              title="Pedir dica"
+            >
+              <Lightbulb className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </div>
@@ -271,6 +290,28 @@ export function ChatPage() {
             </div>
           )}
 
+          {/* Hint Box */}
+          {showHint && (
+            <div className="flex justify-center">
+              <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 max-w-md">
+                {hintLoading ? (
+                  <div className="flex items-center gap-2 text-amber-700">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="text-sm">Buscando dica...</span>
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-2">
+                    <Lightbulb className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-amber-800 mb-1">💡 Dica do Tutor:</p>
+                      <p className="text-amber-900">{currentHint}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           <div ref={messagesEndRef} />
         </div>
       </div>
@@ -278,20 +319,6 @@ export function ChatPage() {
       {/* Input Area */}
       <div className="bg-white border-t border-slate-100 px-4 py-4">
         <div className="max-w-4xl mx-auto">
-          {/* Usage Indicator */}
-          {messagesRemaining <= 2 && (
-            <div className="text-center mb-2">
-              <span className={cn(
-                'text-sm font-medium',
-                messagesRemaining === 0 ? 'text-red-600' : 'text-amber-600'
-              )}>
-                {messagesRemaining === 0
-                  ? 'Você atingiu seu limite diário! Volte amanhã para mais aprendizado. 🌟'
-                  : `${messagesRemaining} mensagens restantes hoje`}
-              </span>
-            </div>
-          )}
-
           <div className="flex items-end gap-3">
             <div className="flex-1 relative">
               <textarea
@@ -302,7 +329,6 @@ export function ChatPage() {
                 placeholder="Digite sua mensagem..."
                 className="input resize-none pr-12"
                 rows={1}
-                disabled={messagesRemaining <= 0}
               />
               <button
                 onClick={() => setIsRecording(!isRecording)}

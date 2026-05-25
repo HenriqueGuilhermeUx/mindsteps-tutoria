@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores'
+import { profileApi } from '@/lib/api'
 import { ChevronRight, ChevronLeft, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -59,7 +60,16 @@ const TUTORS = [
   },
 ]
 
-const STEPS = ['Nome', 'Idade', 'Ano Escolar', 'Tutor']
+const INTERESTS = [
+  { id: 'jogos', emoji: '🎮', label: 'Jogos' },
+  { id: 'musica', emoji: '🎵', label: 'Música' },
+  { id: 'esportes', emoji: '⚽', label: 'Esportes' },
+  { id: 'arte', emoji: '🎨', label: 'Arte' },
+  { id: 'tecnologia', emoji: '💻', label: 'Tecnologia' },
+  { id: 'natureza', emoji: '🌿', label: 'Natureza' },
+]
+
+const STEPS = ['Nome', 'Idade', 'Escola', 'Interesses', 'Tutor']
 
 export function OnboardingPage() {
   const navigate = useNavigate()
@@ -72,6 +82,7 @@ export function OnboardingPage() {
     ageGroup: profile?.ageGroup || '',
     grade: profile?.grade || '',
     tutorId: profile?.tutorId || 'default',
+    interests: [] as string[],
   })
 
   const canProceed = () => {
@@ -83,30 +94,49 @@ export function OnboardingPage() {
       case 2:
         return data.grade !== ''
       case 3:
+        return data.interests.length >= 1 // At least one interest
+      case 4:
         return true
       default:
         return false
     }
   }
 
+  const toggleInterest = (interestId: string) => {
+    setData(prev => ({
+      ...prev,
+      interests: prev.interests.includes(interestId)
+        ? prev.interests.filter(i => i !== interestId)
+        : [...prev.interests, interestId]
+    }))
+  }
+
   const handleNext = async () => {
     if (step < STEPS.length - 1) {
       setStep(step + 1)
     } else {
-      // Complete onboarding
+      // Complete onboarding - save to backend
       setIsLoading(true)
       try {
+        // Update profile in backend
+        await profileApi.update({
+          name: data.name,
+          tutorId: data.tutorId,
+        })
+
+        // Update local state
         setProfile({
-          id: profile?.id || 0,
+          id: profile?.id || '',
           name: data.name,
           ageGroup: data.ageGroup as any,
           grade: data.grade,
-          xp: 0,
-          level: 1,
-          streak: 0,
+          xp: profile?.xp || 0,
+          level: profile?.level || 1,
+          streak: profile?.streak || 0,
           tutorId: data.tutorId,
-          petXp: 0,
+          petXp: profile?.petXp || 0,
         })
+
         toast.success('Perfil criado! Vamos aprender!')
         navigate('/chat')
       } catch (error) {
@@ -235,8 +265,40 @@ export function OnboardingPage() {
             </div>
           )}
 
-          {/* Step 3: Tutor */}
+          {/* Step 3: Interests */}
           {step === 3 && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-slate-900 text-center">
+                O que você gosta de fazer?
+              </h2>
+              <p className="text-slate-600 text-center">
+                me conte seus hobbies para eu personalizar suas conversas!
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                {INTERESTS.map((interest) => (
+                  <button
+                    key={interest.id}
+                    onClick={() => toggleInterest(interest.id)}
+                    className={cn(
+                      'p-4 rounded-xl border-2 text-center transition-all flex items-center gap-2',
+                      data.interests.includes(interest.id)
+                        ? 'border-primary-500 bg-primary-50'
+                        : 'border-slate-200 hover:border-slate-300'
+                    )}
+                  >
+                    <span className="text-2xl">{interest.emoji}</span>
+                    <span className="font-medium">{interest.label}</span>
+                  </button>
+                ))}
+              </div>
+              <p className="text-center text-sm text-slate-500">
+                Selecione pelo menos um ({data.interests.length} selecionado)
+              </p>
+            </div>
+          )}
+
+          {/* Step 4: Tutor */}
+          {step === 4 && (
             <div className="space-y-6">
               <h2 className="text-2xl font-bold text-slate-900 text-center">
                 Escolha seu Tutor!
