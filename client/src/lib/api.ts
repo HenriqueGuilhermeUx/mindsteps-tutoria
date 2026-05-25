@@ -1,6 +1,6 @@
 import { useAuthStore } from '@/stores'
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api'
+const API_BASE = import.meta.env.VITE_API_URL || 'https://mindsteps-api.onrender.com'
 
 interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
@@ -35,13 +35,13 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
 // Auth
 export const authApi = {
   register: (data: { email: string; password: string; name: string; age: string; grade: string }) =>
-    request<{ token: string; user: { id: number; email: string }; profile: unknown }>('/auth/register', {
+    request<{ token: string; user: { id: string; email: string }; profile: unknown }>('/api/auth/register', {
       method: 'POST',
       body: data,
     }),
 
   login: (data: { email: string; password: string }) =>
-    request<{ token: string; user: { id: number; email: string }; profile: unknown }>('/auth/login', {
+    request<{ token: string; user: { id: string; email: string }; profile: unknown }>('/api/auth/login', {
       method: 'POST',
       body: data,
     }),
@@ -50,22 +50,22 @@ export const authApi = {
 // Study
 export const studyApi = {
   startSession: (tutorId: string) =>
-    request<{ sessionId: number }>('/study/startSession', {
+    request<{ sessionId: string }>('/api/study/startSession', {
       method: 'POST',
       body: { tutorId },
     }),
 
-  sendMessage: (sessionId: number, content: string) =>
-    request<{ response: string; xpEarned: number; cognitiveLevel: number }>('/study/sendMessage', {
+  sendMessage: (sessionId: string, content: string, subject?: string) =>
+    request<{ response: string; xpEarned: number; cognitiveLevel: number }>('/api/study/sendMessage', {
       method: 'POST',
-      body: { sessionId, content },
+      body: { sessionId, content, subject },
     }),
 
-  getHistory: (sessionId: number) =>
-    request<{ messages: Array<{ role: string; content: string; createdAt: string }> }>(`/study/history/${sessionId}`),
+  getHistory: (sessionId: string) =>
+    request<{ messages: Array<{ role: string; content: string; createdAt: string }> }>(`/api/study/history?sessionId=${sessionId}`),
 
-  endSession: (sessionId: number) =>
-    request<{ stats: unknown }>('/study/endSession', {
+  endSession: (sessionId: string) =>
+    request<{ success: boolean }>('/api/study/endSession', {
       method: 'POST',
       body: { sessionId },
     }),
@@ -73,45 +73,19 @@ export const studyApi = {
 
 // Profile
 export const profileApi = {
-  get: () => request<unknown>('/profile/get'),
+  get: () => request<unknown>('/api/profile'),
 
-  update: (data: { name?: string; tutorId?: string }) =>
-    request<unknown>('/profile/update', {
+  update: (data: { name?: string; tutorId?: string; petType?: string; petName?: string }) =>
+    request<unknown>('/api/profile/update', {
       method: 'POST',
       body: data,
     }),
 
   claimDaily: () =>
-    request<{ streak: number; bonus: number }>('/profile/claimDaily', { method: 'POST' }),
+    request<{ streak: number; bonus: number }>('/api/profile/claimDaily', { method: 'POST' }),
 }
 
 // Usage
 export const usageApi = {
-  check: () => request<{ remaining: number; limit: number }>('/usage/check'),
-}
-
-// Quiz
-export const quizApi = {
-  generate: (topic: string) =>
-    request<{ questions: Array<{ id: string; question: string; options: string[]; correctIndex: number }> }>('/quiz/generate', {
-      method: 'POST',
-      body: { topic },
-    }),
-
-  submit: (answers: Array<{ questionId: string; answer: number }>) =>
-    request<{ score: number; xpEarned: number }>('/quiz/submit', {
-      method: 'POST',
-      body: { answers },
-    }),
-}
-
-// Pets
-export const petApi = {
-  create: (petType: string, petName: string) =>
-    request<unknown>('/pet/create', {
-      method: 'POST',
-      body: { petType, petName },
-    }),
-
-  get: () => request<unknown>('/pet/get'),
+  check: () => request<{ remaining: number; limit: number }>('/api/usage/check'),
 }

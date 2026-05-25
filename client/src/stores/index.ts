@@ -2,12 +2,12 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 interface User {
-  id: number
+  id: string
   email: string
 }
 
 interface Profile {
-  id: number
+  id: string
   name: string
   ageGroup: '6-10' | '11-14' | '15-17'
   grade: string
@@ -93,12 +93,12 @@ interface ChatMessage {
 interface ChatState {
   messages: ChatMessage[]
   isLoading: boolean
-  sessionId: number | null
+  sessionId: string | null
   subject: string
   setMessages: (messages: ChatMessage[]) => void
   addMessage: (message: ChatMessage) => void
   setLoading: (loading: boolean) => void
-  setSessionId: (id: number | null) => void
+  setSessionId: (id: string | null) => void
   setSubject: (subject: string) => void
   clearChat: () => void
 }
