@@ -1,16 +1,11 @@
 import { Link } from 'react-router-dom'
-import { Header } from '@/components/Header'
-import { Footer } from '@/components/Footer'
 import { BookOpen, MessageCircle, Sparkles, Zap, ChevronRight, Star } from 'lucide-react'
 
 export function HomePage() {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-
-      <main className="flex-1">
-        {/* Hero Section */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-20 sm:py-32">
+    <div className="flex-1">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-20 sm:py-32">
           <div className="absolute inset-0 overflow-hidden">
             <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-200 rounded-full opacity-20 blur-3xl" />
             <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-200 rounded-full opacity-20 blur-3xl" />
@@ -161,10 +156,7 @@ export function HomePage() {
             </Link>
           </div>
         </section>
-      </main>
-
-      <Footer />
-    </div>
+      </div>
   )
 }
 

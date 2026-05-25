@@ -1,6 +1,6 @@
 import { useAuthStore } from '@/stores'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://mindsteps-api.onrender.com'
+const API_BASE = import.meta.env.VITE_API_URL || 'https://mindsteps-backend.onrender.com'
 
 interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
