@@ -5,3 +5,6 @@ export * from './learningMemory';
 export * from './cognitiveTwin';
 export * from './orchestrator';
 export * from './recommendationEngine';
+export * from './confidenceEngine';
+export * from './curiosityEngine';
+export * from './reflectionEngine';
