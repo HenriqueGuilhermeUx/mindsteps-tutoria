@@ -13,6 +13,7 @@ import { analyzeConfidence, type ConfidenceInsight } from './confidenceEngine';
 import { analyzeCuriosity, type CuriosityInsight } from './curiosityEngine';
 import { createReflectionPrompt, type ReflectionPrompt } from './reflectionEngine';
 import { generateRecommendations, type LearningRecommendation } from './recommendationEngine';
+import { planNextJourneyStep, type JourneyStep } from './adaptiveJourney';
 
 export interface OrchestratorInput {
   learnerId: string;
@@ -34,6 +35,7 @@ export interface OrchestratorOutput {
   curiosity: CuriosityInsight;
   reflection: ReflectionPrompt;
   recommendations: LearningRecommendation[];
+  nextJourneyStep: JourneyStep;
 }
 
 export function buildLearningContext(input: OrchestratorInput): LearningContext {
@@ -55,8 +57,9 @@ export function buildAiContext(params: {
   curiosity: CuriosityInsight;
   reflection: ReflectionPrompt;
   recommendations: LearningRecommendation[];
+  nextJourneyStep: JourneyStep;
 }): string {
-  const { context, plan, confidence, curiosity, reflection, recommendations } = params;
+  const { context, plan, confidence, curiosity, reflection, recommendations, nextJourneyStep } = params;
   const twinSummary = summarizeCognitiveTwin(context.cognitiveTwin);
   const memorySummary = summarizeLearningMemory(context.learningMemory);
   const recommendationSummary = recommendations
@@ -83,6 +86,7 @@ export function buildAiContext(params: {
     `Confidence State: ${confidence.state}. ${confidence.recommendedAction}`,
     `Curiosity State: ${curiosity.state}. ${curiosity.recommendedAction}`,
     `Reflection Prompt: ${reflection.question}`,
+    `Next Journey Step: ${nextJourneyStep.type} - ${nextJourneyStep.title}. ${nextJourneyStep.description}`,
     recommendationSummary ? `Recommendations: ${recommendationSummary}` : '',
     '',
     `Learner message: ${context.currentMessage}`,
@@ -105,6 +109,11 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     memory: updatedMemory,
   });
   const recommendations = generateRecommendations({ twin: updatedTwin, memory: updatedMemory });
+  const nextJourneyStep = planNextJourneyStep({
+    twin: updatedTwin,
+    memory: updatedMemory,
+    subject: input.subject,
+  });
   const aiContext = buildAiContext({
     context: { ...context, cognitiveTwin: updatedTwin, learningMemory: updatedMemory },
     plan,
@@ -112,6 +121,7 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     curiosity,
     reflection,
     recommendations,
+    nextJourneyStep,
   });
 
   return {
@@ -124,5 +134,6 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     curiosity,
     reflection,
     recommendations,
+    nextJourneyStep,
   };
 }
