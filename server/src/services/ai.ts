@@ -84,7 +84,8 @@ export async function generateSocraticResponse(
   tutorId: string,
   ageGroup: string,
   studentName: string,
-  subject: string = 'geral'
+  subject: string = 'geral',
+  learningCoreContext?: string
 ): Promise<string> {
   const persona = TUTOR_PERSONAS[tutorId] || TUTOR_PERSONAS.default
   const ageGuidance = getAgeGuidance(ageGroup)
@@ -96,8 +97,18 @@ ${ageGuidance}
 MATÉRIA ATUAL: ${subject}
 ESTUDANTE: ${studentName}
 
+MINDSTEPS CORE CONTEXT:
+${learningCoreContext || 'Sem contexto pedagógico adicional disponível nesta sessão.'}
+
+REGRAS DO CORE:
+- A estratégia pedagógica vem antes da resposta.
+- Não entregue resposta pronta quando puder guiar o raciocínio.
+- Se houver sinal de frustração, acolha antes de desafiar.
+- Se houver sinal de curiosidade, expanda com pergunta investigativa.
+- Termine, quando adequado, com uma pergunta curta que ajude o aluno a pensar.
+
 Lembre-se: Seu objetivo é fazer ${studentName} PENSAR, não apenas saber a resposta.
-Use 1-2 perguntas socráticas, depois uma mini-explicação se apropiado.
+Use 1-2 perguntas socráticas, depois uma mini-explicação se apropriado.
 Mantenha as respostas relativamente curtas (2-4 parágrafos no máximo).
 Use emojis com moderação para manter o tom educacional.`
 
