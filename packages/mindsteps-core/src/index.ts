@@ -9,3 +9,5 @@ export * from './confidenceEngine';
 export * from './curiosityEngine';
 export * from './reflectionEngine';
 export * from './adaptiveJourney';
+export * from './learningSession';
+export * from './learningState';
