@@ -10,7 +10,8 @@ import {
   getTodayUsage,
   incrementUsage,
 } from '../db/index.js'
-import { generateSocraticResponse, detectFrustration, calculateCognitiveLevel } from '../services/ai.js'
+import { generateSocraticResponse, calculateCognitiveLevel } from '../services/ai.js'
+import { buildLearningCoreContext } from '../services/learningCoreContext.js'
 import { authMiddleware } from './auth.js'
 
 const router = Router()
@@ -101,6 +102,13 @@ router.post('/study/sendMessage', async (req, res) => {
       content: m.content,
     }))
 
+    const learningCoreContext = buildLearningCoreContext({
+      profile,
+      subject: subject || 'geral',
+      message: content,
+      history: conversationHistory,
+    })
+
     // Generate response
     let response: string
     try {
@@ -110,7 +118,8 @@ router.post('/study/sendMessage', async (req, res) => {
         profile.tutor_id,
         profile.age_group,
         profile.name,
-        subject || 'geral'
+        subject || 'geral',
+        learningCoreContext
       )
     } catch (aiError) {
       console.error('AI error:', aiError)
@@ -134,6 +143,10 @@ router.post('/study/sendMessage', async (req, res) => {
       response,
       xpEarned,
       cognitiveLevel,
+      learningCore: {
+        enabled: true,
+        contextPreview: learningCoreContext.split('\n').slice(0, 4),
+      },
     })
   } catch (error) {
     console.error('Send message error:', error)
