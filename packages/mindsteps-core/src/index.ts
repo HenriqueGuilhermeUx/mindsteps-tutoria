@@ -8,3 +8,4 @@ export * from './recommendationEngine';
 export * from './confidenceEngine';
 export * from './curiosityEngine';
 export * from './reflectionEngine';
+export * from './adaptiveJourney';
