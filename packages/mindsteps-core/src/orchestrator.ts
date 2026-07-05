@@ -7,9 +7,12 @@ import type {
   Subject,
 } from './types';
 import { createLearningResponsePlan } from './pedagogicalEngine';
-import { applyLearningEventsToMemory } from './learningMemory';
+import { applyLearningEventsToMemory, summarizeLearningMemory } from './learningMemory';
 import { applyLearningEventsToTwin, summarizeCognitiveTwin } from './cognitiveTwin';
-import { summarizeLearningMemory } from './learningMemory';
+import { analyzeConfidence, type ConfidenceInsight } from './confidenceEngine';
+import { analyzeCuriosity, type CuriosityInsight } from './curiosityEngine';
+import { createReflectionPrompt, type ReflectionPrompt } from './reflectionEngine';
+import { generateRecommendations, type LearningRecommendation } from './recommendationEngine';
 
 export interface OrchestratorInput {
   learnerId: string;
@@ -27,6 +30,10 @@ export interface OrchestratorOutput {
   updatedMemory: LearningMemory;
   aiContext: string;
   events: LearningEvent[];
+  confidence: ConfidenceInsight;
+  curiosity: CuriosityInsight;
+  reflection: ReflectionPrompt;
+  recommendations: LearningRecommendation[];
 }
 
 export function buildLearningContext(input: OrchestratorInput): LearningContext {
@@ -44,15 +51,22 @@ export function buildLearningContext(input: OrchestratorInput): LearningContext 
 export function buildAiContext(params: {
   context: LearningContext;
   plan: LearningResponsePlan;
+  confidence: ConfidenceInsight;
+  curiosity: CuriosityInsight;
+  reflection: ReflectionPrompt;
+  recommendations: LearningRecommendation[];
 }): string {
-  const { context, plan } = params;
+  const { context, plan, confidence, curiosity, reflection, recommendations } = params;
   const twinSummary = summarizeCognitiveTwin(context.cognitiveTwin);
   const memorySummary = summarizeLearningMemory(context.learningMemory);
+  const recommendationSummary = recommendations
+    .map((item) => `${item.target}/${item.priority}: ${item.title} - ${item.description}`)
+    .join(' | ');
 
   return [
     'You are MindSteps, a learning companion powered by a pedagogical engine.',
     'Never give a direct answer when the learner can be guided to think.',
-    'Use the selected pedagogical strategy below.',
+    'Use the selected pedagogical strategy and learning insights below.',
     '',
     `Learner: ${context.learnerName || context.learnerId}`,
     `Subject: ${context.subject}`,
@@ -66,6 +80,11 @@ export function buildAiContext(params: {
     plan.strategy.suggestedQuestion ? `Suggested Question: ${plan.strategy.suggestedQuestion}` : '',
     plan.strategy.suggestedAnalogy ? `Suggested Analogy: ${plan.strategy.suggestedAnalogy}` : '',
     '',
+    `Confidence State: ${confidence.state}. ${confidence.recommendedAction}`,
+    `Curiosity State: ${curiosity.state}. ${curiosity.recommendedAction}`,
+    `Reflection Prompt: ${reflection.question}`,
+    recommendationSummary ? `Recommendations: ${recommendationSummary}` : '',
+    '',
     `Learner message: ${context.currentMessage}`,
   ]
     .filter(Boolean)
@@ -78,7 +97,22 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
   const events = plan.memoryUpdates;
   const updatedTwin = applyLearningEventsToTwin(input.cognitiveTwin, events);
   const updatedMemory = applyLearningEventsToMemory(input.learningMemory, events);
-  const aiContext = buildAiContext({ context, plan });
+  const confidence = analyzeConfidence(updatedTwin, events);
+  const curiosity = analyzeCuriosity(updatedTwin, events);
+  const reflection = createReflectionPrompt({
+    subject: input.subject,
+    twin: updatedTwin,
+    memory: updatedMemory,
+  });
+  const recommendations = generateRecommendations({ twin: updatedTwin, memory: updatedMemory });
+  const aiContext = buildAiContext({
+    context: { ...context, cognitiveTwin: updatedTwin, learningMemory: updatedMemory },
+    plan,
+    confidence,
+    curiosity,
+    reflection,
+    recommendations,
+  });
 
   return {
     plan,
@@ -86,5 +120,9 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     updatedMemory,
     aiContext,
     events,
+    confidence,
+    curiosity,
+    reflection,
+    recommendations,
   };
 }
