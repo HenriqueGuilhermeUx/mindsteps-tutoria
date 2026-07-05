@@ -14,6 +14,7 @@ import { analyzeCuriosity, type CuriosityInsight } from './curiosityEngine';
 import { createReflectionPrompt, type ReflectionPrompt } from './reflectionEngine';
 import { generateRecommendations, type LearningRecommendation } from './recommendationEngine';
 import { planNextJourneyStep, type JourneyStep } from './adaptiveJourney';
+import { analyzeLearningState, type LearningState } from './learningState';
 
 export interface OrchestratorInput {
   learnerId: string;
@@ -33,6 +34,7 @@ export interface OrchestratorOutput {
   events: LearningEvent[];
   confidence: ConfidenceInsight;
   curiosity: CuriosityInsight;
+  learningState: LearningState;
   reflection: ReflectionPrompt;
   recommendations: LearningRecommendation[];
   nextJourneyStep: JourneyStep;
@@ -55,11 +57,12 @@ export function buildAiContext(params: {
   plan: LearningResponsePlan;
   confidence: ConfidenceInsight;
   curiosity: CuriosityInsight;
+  learningState: LearningState;
   reflection: ReflectionPrompt;
   recommendations: LearningRecommendation[];
   nextJourneyStep: JourneyStep;
 }): string {
-  const { context, plan, confidence, curiosity, reflection, recommendations, nextJourneyStep } = params;
+  const { context, plan, confidence, curiosity, learningState, reflection, recommendations, nextJourneyStep } = params;
   const twinSummary = summarizeCognitiveTwin(context.cognitiveTwin);
   const memorySummary = summarizeLearningMemory(context.learningMemory);
   const recommendationSummary = recommendations
@@ -83,6 +86,8 @@ export function buildAiContext(params: {
     plan.strategy.suggestedQuestion ? `Suggested Question: ${plan.strategy.suggestedQuestion}` : '',
     plan.strategy.suggestedAnalogy ? `Suggested Analogy: ${plan.strategy.suggestedAnalogy}` : '',
     '',
+    `Learning State: ${learningState.label}. ${learningState.recommendedTeachingMove}`,
+    `Learning Energy: ${learningState.energy}. Cognitive Load: ${learningState.cognitiveLoad}/10. Persistence: ${learningState.persistence}/10.`,
     `Confidence State: ${confidence.state}. ${confidence.recommendedAction}`,
     `Curiosity State: ${curiosity.state}. ${curiosity.recommendedAction}`,
     `Reflection Prompt: ${reflection.question}`,
@@ -103,6 +108,7 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
   const updatedMemory = applyLearningEventsToMemory(input.learningMemory, events);
   const confidence = analyzeConfidence(updatedTwin, events);
   const curiosity = analyzeCuriosity(updatedTwin, events);
+  const learningState = analyzeLearningState(updatedTwin, events);
   const reflection = createReflectionPrompt({
     subject: input.subject,
     twin: updatedTwin,
@@ -119,6 +125,7 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     plan,
     confidence,
     curiosity,
+    learningState,
     reflection,
     recommendations,
     nextJourneyStep,
@@ -132,6 +139,7 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     events,
     confidence,
     curiosity,
+    learningState,
     reflection,
     recommendations,
     nextJourneyStep,
