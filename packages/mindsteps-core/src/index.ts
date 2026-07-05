@@ -11,3 +11,5 @@ export * from './reflectionEngine';
 export * from './adaptiveJourney';
 export * from './learningSession';
 export * from './learningState';
+export * from './misconceptionEngine';
+export * from './teachingStrategyMemory';
