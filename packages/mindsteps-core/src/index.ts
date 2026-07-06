@@ -14,3 +14,5 @@ export * from './learningState';
 export * from './misconceptionEngine';
 export * from './teachingStrategyMemory';
 export * from './learningSignals';
+export * from './teacherCopilot';
+export * from './familyCompanion';
