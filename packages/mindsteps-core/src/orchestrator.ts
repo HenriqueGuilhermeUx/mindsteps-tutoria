@@ -15,6 +15,8 @@ import { createReflectionPrompt, type ReflectionPrompt } from './reflectionEngin
 import { generateRecommendations, type LearningRecommendation } from './recommendationEngine';
 import { planNextJourneyStep, type JourneyStep } from './adaptiveJourney';
 import { analyzeLearningState, type LearningState } from './learningState';
+import { detectMisconceptionPatterns, summarizeMisconceptions, type MisconceptionPattern } from './misconceptionEngine';
+import { extractLearningSignals, summarizeLearningSignals, type LearningSignal } from './learningSignals';
 
 export interface OrchestratorInput {
   learnerId: string;
@@ -38,6 +40,8 @@ export interface OrchestratorOutput {
   reflection: ReflectionPrompt;
   recommendations: LearningRecommendation[];
   nextJourneyStep: JourneyStep;
+  misconceptions: MisconceptionPattern[];
+  signals: LearningSignal[];
 }
 
 export function buildLearningContext(input: OrchestratorInput): LearningContext {
@@ -61,13 +65,17 @@ export function buildAiContext(params: {
   reflection: ReflectionPrompt;
   recommendations: LearningRecommendation[];
   nextJourneyStep: JourneyStep;
+  misconceptions: MisconceptionPattern[];
+  signals: LearningSignal[];
 }): string {
-  const { context, plan, confidence, curiosity, learningState, reflection, recommendations, nextJourneyStep } = params;
+  const { context, plan, confidence, curiosity, learningState, reflection, recommendations, nextJourneyStep, misconceptions, signals } = params;
   const twinSummary = summarizeCognitiveTwin(context.cognitiveTwin);
   const memorySummary = summarizeLearningMemory(context.learningMemory);
   const recommendationSummary = recommendations
     .map((item) => `${item.target}/${item.priority}: ${item.title} - ${item.description}`)
     .join(' | ');
+  const misconceptionSummary = summarizeMisconceptions(misconceptions);
+  const signalSummary = summarizeLearningSignals(signals);
 
   return [
     'You are MindSteps, a learning companion powered by a pedagogical engine.',
@@ -90,6 +98,8 @@ export function buildAiContext(params: {
     `Learning Energy: ${learningState.energy}. Cognitive Load: ${learningState.cognitiveLoad}/10. Persistence: ${learningState.persistence}/10.`,
     `Confidence State: ${confidence.state}. ${confidence.recommendedAction}`,
     `Curiosity State: ${curiosity.state}. ${curiosity.recommendedAction}`,
+    `Misconceptions: ${misconceptionSummary}`,
+    `Learning Signals: ${signalSummary}`,
     `Reflection Prompt: ${reflection.question}`,
     `Next Journey Step: ${nextJourneyStep.type} - ${nextJourneyStep.title}. ${nextJourneyStep.description}`,
     recommendationSummary ? `Recommendations: ${recommendationSummary}` : '',
@@ -109,6 +119,18 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
   const confidence = analyzeConfidence(updatedTwin, events);
   const curiosity = analyzeCuriosity(updatedTwin, events);
   const learningState = analyzeLearningState(updatedTwin, events);
+  const misconceptions = detectMisconceptionPatterns({
+    subject: input.subject,
+    message: input.message,
+    events,
+  });
+  const signals = extractLearningSignals({
+    learnerId: input.learnerId,
+    subject: input.subject,
+    events,
+    learningState,
+    misconceptions,
+  });
   const reflection = createReflectionPrompt({
     subject: input.subject,
     twin: updatedTwin,
@@ -129,6 +151,8 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     reflection,
     recommendations,
     nextJourneyStep,
+    misconceptions,
+    signals,
   });
 
   return {
@@ -143,5 +167,7 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     reflection,
     recommendations,
     nextJourneyStep,
+    misconceptions,
+    signals,
   };
 }
