@@ -17,6 +17,8 @@ import { planNextJourneyStep, type JourneyStep } from './adaptiveJourney';
 import { analyzeLearningState, type LearningState } from './learningState';
 import { detectMisconceptionPatterns, summarizeMisconceptions, type MisconceptionPattern } from './misconceptionEngine';
 import { extractLearningSignals, summarizeLearningSignals, type LearningSignal } from './learningSignals';
+import { generateTeacherInsights, summarizeTeacherInsights, type TeacherInsight } from './teacherCopilot';
+import { generateFamilyCompanionMessages, summarizeFamilyCompanionMessages, type FamilyCompanionMessage } from './familyCompanion';
 
 export interface OrchestratorInput {
   learnerId: string;
@@ -42,6 +44,8 @@ export interface OrchestratorOutput {
   nextJourneyStep: JourneyStep;
   misconceptions: MisconceptionPattern[];
   signals: LearningSignal[];
+  teacherInsights: TeacherInsight[];
+  familyMessages: FamilyCompanionMessage[];
 }
 
 export function buildLearningContext(input: OrchestratorInput): LearningContext {
@@ -67,8 +71,23 @@ export function buildAiContext(params: {
   nextJourneyStep: JourneyStep;
   misconceptions: MisconceptionPattern[];
   signals: LearningSignal[];
+  teacherInsights: TeacherInsight[];
+  familyMessages: FamilyCompanionMessage[];
 }): string {
-  const { context, plan, confidence, curiosity, learningState, reflection, recommendations, nextJourneyStep, misconceptions, signals } = params;
+  const {
+    context,
+    plan,
+    confidence,
+    curiosity,
+    learningState,
+    reflection,
+    recommendations,
+    nextJourneyStep,
+    misconceptions,
+    signals,
+    teacherInsights,
+    familyMessages,
+  } = params;
   const twinSummary = summarizeCognitiveTwin(context.cognitiveTwin);
   const memorySummary = summarizeLearningMemory(context.learningMemory);
   const recommendationSummary = recommendations
@@ -76,6 +95,8 @@ export function buildAiContext(params: {
     .join(' | ');
   const misconceptionSummary = summarizeMisconceptions(misconceptions);
   const signalSummary = summarizeLearningSignals(signals);
+  const teacherSummary = summarizeTeacherInsights(teacherInsights);
+  const familySummary = summarizeFamilyCompanionMessages(familyMessages);
 
   return [
     'You are MindSteps, a learning companion powered by a pedagogical engine.',
@@ -100,6 +121,8 @@ export function buildAiContext(params: {
     `Curiosity State: ${curiosity.state}. ${curiosity.recommendedAction}`,
     `Misconceptions: ${misconceptionSummary}`,
     `Learning Signals: ${signalSummary}`,
+    `Teacher Copilot: ${teacherSummary}`,
+    `Family Companion: ${familySummary}`,
     `Reflection Prompt: ${reflection.question}`,
     `Next Journey Step: ${nextJourneyStep.type} - ${nextJourneyStep.title}. ${nextJourneyStep.description}`,
     recommendationSummary ? `Recommendations: ${recommendationSummary}` : '',
@@ -142,6 +165,19 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     memory: updatedMemory,
     subject: input.subject,
   });
+  const teacherInsights = generateTeacherInsights({
+    learnerName: input.learnerName,
+    subject: input.subject,
+    learningState,
+    signals,
+    misconceptions,
+  });
+  const familyMessages = generateFamilyCompanionMessages({
+    learnerName: input.learnerName,
+    subject: input.subject,
+    learningState,
+    signals,
+  });
   const aiContext = buildAiContext({
     context: { ...context, cognitiveTwin: updatedTwin, learningMemory: updatedMemory },
     plan,
@@ -153,6 +189,8 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     nextJourneyStep,
     misconceptions,
     signals,
+    teacherInsights,
+    familyMessages,
   });
 
   return {
@@ -169,5 +207,7 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     nextJourneyStep,
     misconceptions,
     signals,
+    teacherInsights,
+    familyMessages,
   };
 }
