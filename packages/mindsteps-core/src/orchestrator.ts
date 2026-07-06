@@ -19,6 +19,7 @@ import { detectMisconceptionPatterns, summarizeMisconceptions, type Misconceptio
 import { extractLearningSignals, summarizeLearningSignals, type LearningSignal } from './learningSignals';
 import { generateTeacherInsights, summarizeTeacherInsights, type TeacherInsight } from './teacherCopilot';
 import { generateFamilyCompanionMessages, summarizeFamilyCompanionMessages, type FamilyCompanionMessage } from './familyCompanion';
+import { planInterventions, summarizeInterventionPlans, type InterventionPlan } from './interventionEngine';
 
 export interface OrchestratorInput {
   learnerId: string;
@@ -46,6 +47,7 @@ export interface OrchestratorOutput {
   signals: LearningSignal[];
   teacherInsights: TeacherInsight[];
   familyMessages: FamilyCompanionMessage[];
+  interventions: InterventionPlan[];
 }
 
 export function buildLearningContext(input: OrchestratorInput): LearningContext {
@@ -73,6 +75,7 @@ export function buildAiContext(params: {
   signals: LearningSignal[];
   teacherInsights: TeacherInsight[];
   familyMessages: FamilyCompanionMessage[];
+  interventions: InterventionPlan[];
 }): string {
   const {
     context,
@@ -87,6 +90,7 @@ export function buildAiContext(params: {
     signals,
     teacherInsights,
     familyMessages,
+    interventions,
   } = params;
   const twinSummary = summarizeCognitiveTwin(context.cognitiveTwin);
   const memorySummary = summarizeLearningMemory(context.learningMemory);
@@ -97,6 +101,7 @@ export function buildAiContext(params: {
   const signalSummary = summarizeLearningSignals(signals);
   const teacherSummary = summarizeTeacherInsights(teacherInsights);
   const familySummary = summarizeFamilyCompanionMessages(familyMessages);
+  const interventionSummary = summarizeInterventionPlans(interventions);
 
   return [
     'You are MindSteps, a learning companion powered by a pedagogical engine.',
@@ -123,6 +128,7 @@ export function buildAiContext(params: {
     `Learning Signals: ${signalSummary}`,
     `Teacher Copilot: ${teacherSummary}`,
     `Family Companion: ${familySummary}`,
+    `Intervention Plan: ${interventionSummary}`,
     `Reflection Prompt: ${reflection.question}`,
     `Next Journey Step: ${nextJourneyStep.type} - ${nextJourneyStep.title}. ${nextJourneyStep.description}`,
     recommendationSummary ? `Recommendations: ${recommendationSummary}` : '',
@@ -178,6 +184,14 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     learningState,
     signals,
   });
+  const interventions = planInterventions({
+    learnerName: input.learnerName,
+    subject: input.subject,
+    learningState,
+    signals,
+    teacherInsights,
+    familyMessages,
+  });
   const aiContext = buildAiContext({
     context: { ...context, cognitiveTwin: updatedTwin, learningMemory: updatedMemory },
     plan,
@@ -191,6 +205,7 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     signals,
     teacherInsights,
     familyMessages,
+    interventions,
   });
 
   return {
@@ -209,5 +224,6 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     signals,
     teacherInsights,
     familyMessages,
+    interventions,
   };
 }
