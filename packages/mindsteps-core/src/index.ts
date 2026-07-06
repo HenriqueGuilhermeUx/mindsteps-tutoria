@@ -18,3 +18,4 @@ export * from './teacherCopilot';
 export * from './familyCompanion';
 export * from './whiteLabel';
 export * from './learningGraph';
+export * from './interventionEngine';
