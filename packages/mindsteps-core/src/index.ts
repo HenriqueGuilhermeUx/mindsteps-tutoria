@@ -17,3 +17,4 @@ export * from './learningSignals';
 export * from './teacherCopilot';
 export * from './familyCompanion';
 export * from './whiteLabel';
+export * from './learningGraph';
