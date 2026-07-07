@@ -20,6 +20,7 @@ import { extractLearningSignals, summarizeLearningSignals, type LearningSignal }
 import { generateTeacherInsights, summarizeTeacherInsights, type TeacherInsight } from './teacherCopilot';
 import { generateFamilyCompanionMessages, summarizeFamilyCompanionMessages, type FamilyCompanionMessage } from './familyCompanion';
 import { planInterventions, summarizeInterventionPlans, type InterventionPlan } from './interventionEngine';
+import { analyzeFlow, type FlowInsight } from './flowEngine';
 
 export interface OrchestratorInput {
   learnerId: string;
@@ -40,6 +41,7 @@ export interface OrchestratorOutput {
   confidence: ConfidenceInsight;
   curiosity: CuriosityInsight;
   learningState: LearningState;
+  flow: FlowInsight;
   reflection: ReflectionPrompt;
   recommendations: LearningRecommendation[];
   nextJourneyStep: JourneyStep;
@@ -68,6 +70,7 @@ export function buildAiContext(params: {
   confidence: ConfidenceInsight;
   curiosity: CuriosityInsight;
   learningState: LearningState;
+  flow: FlowInsight;
   reflection: ReflectionPrompt;
   recommendations: LearningRecommendation[];
   nextJourneyStep: JourneyStep;
@@ -83,6 +86,7 @@ export function buildAiContext(params: {
     confidence,
     curiosity,
     learningState,
+    flow,
     reflection,
     recommendations,
     nextJourneyStep,
@@ -122,6 +126,7 @@ export function buildAiContext(params: {
     '',
     `Learning State: ${learningState.label}. ${learningState.recommendedTeachingMove}`,
     `Learning Energy: ${learningState.energy}. Cognitive Load: ${learningState.cognitiveLoad}/10. Persistence: ${learningState.persistence}/10.`,
+    `Flow Zone: ${flow.zone}. ${flow.recommendedAdjustment}`,
     `Confidence State: ${confidence.state}. ${confidence.recommendedAction}`,
     `Curiosity State: ${curiosity.state}. ${curiosity.recommendedAction}`,
     `Misconceptions: ${misconceptionSummary}`,
@@ -160,6 +165,7 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     learningState,
     misconceptions,
   });
+  const flow = analyzeFlow({ learningState, signals });
   const reflection = createReflectionPrompt({
     subject: input.subject,
     twin: updatedTwin,
@@ -198,6 +204,7 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     confidence,
     curiosity,
     learningState,
+    flow,
     reflection,
     recommendations,
     nextJourneyStep,
@@ -217,6 +224,7 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     confidence,
     curiosity,
     learningState,
+    flow,
     reflection,
     recommendations,
     nextJourneyStep,
