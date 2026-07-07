@@ -7,6 +7,17 @@ interface RequestOptions {
   body?: unknown
 }
 
+export interface LearningCoreMetadata {
+  enabled?: boolean
+  contextPreview?: string[]
+  learningState?: string
+  flowZone?: string
+  learningDNA?: string
+  teacherInsights?: string[]
+  familyMessages?: string[]
+  interventions?: string[]
+}
+
 async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   const { token } = useAuthStore.getState()
 
@@ -56,7 +67,7 @@ export const studyApi = {
     }),
 
   sendMessage: (sessionId: string, content: string, subject?: string) =>
-    request<{ response: string; xpEarned: number; cognitiveLevel: number }>('/api/study/sendMessage', {
+    request<{ response: string; xpEarned: number; cognitiveLevel: number; learningCore?: LearningCoreMetadata }>('/api/study/sendMessage', {
       method: 'POST',
       body: { sessionId, content, subject },
     }),
