@@ -20,3 +20,4 @@ export * from './whiteLabel';
 export * from './learningGraph';
 export * from './interventionEngine';
 export * from './flowEngine';
+export * from './learningDNA';
