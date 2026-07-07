@@ -19,3 +19,4 @@ export * from './familyCompanion';
 export * from './whiteLabel';
 export * from './learningGraph';
 export * from './interventionEngine';
+export * from './flowEngine';
