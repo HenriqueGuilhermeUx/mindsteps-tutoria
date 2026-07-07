@@ -2,9 +2,9 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useAuthStore, useChatStore, useUsageStore } from '@/stores'
-import { studyApi, usageApi } from '@/lib/api'
-import { cn, formatXP, getLevelTitle, getXPProgress, getPetEmoji, getPetStage } from '@/lib/utils'
-import { Send, Mic, MicOff, Loader2, Sparkles, Zap, MessageCircle, ChevronDown, Lightbulb } from 'lucide-react'
+import { studyApi, usageApi, type LearningCoreMetadata } from '@/lib/api'
+import { cn, formatXP, getLevelTitle, getPetEmoji } from '@/lib/utils'
+import { Send, Mic, MicOff, Loader2, Sparkles, Zap, MessageCircle, ChevronDown, Lightbulb, Flame, Brain, Activity, GraduationCap, HeartHandshake } from 'lucide-react'
 
 const SUBJECTS = [
   { id: 'geral', label: 'Geral', emoji: '🌟' },
@@ -23,32 +23,43 @@ const SUGGESTED_TOPICS = [
   'Como funciona a gravidade?',
 ]
 
+function getCoreValue(core: LearningCoreMetadata | null, label: string) {
+  if (!core?.contextPreview) return ''
+  const line = core.contextPreview.find((item) => item.toLowerCase().startsWith(label.toLowerCase()))
+  return line?.split(':').slice(1).join(':').trim() || ''
+}
+
 export function ChatPage() {
   const navigate = useNavigate()
   const { profile, addXP, isAuthenticated } = useAuthStore()
   const { messages, isLoading, setLoading, addMessage, clearChat, subject, setSubject, sessionId, setSessionId } = useChatStore()
+  const { messagesRemaining, limit, setUsage, decrementUsage } = useUsageStore()
   const [input, setInput] = useState('')
   const [showSubjects, setShowSubjects] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const [showHint, setShowHint] = useState(false)
   const [hintLoading, setHintLoading] = useState(false)
   const [currentHint, setCurrentHint] = useState('')
+  const [lastLearningCore, setLastLearningCore] = useState<LearningCoreMetadata | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  // Redirect if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/auth')
     }
   }, [isAuthenticated, navigate])
 
-  // Scroll to bottom on new messages
+  useEffect(() => {
+    usageApi.check()
+      .then((usage) => setUsage(usage.remaining, usage.limit))
+      .catch(() => undefined)
+  }, [setUsage])
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, currentHint])
+  }, [messages, currentHint, lastLearningCore])
 
-  // Focus input on mount
   useEffect(() => {
     inputRef.current?.focus()
   }, [])
@@ -70,7 +81,7 @@ export function ChatPage() {
   }
 
   const handleSend = async () => {
-    if (!input.trim() || isLoading) return
+    if (!input.trim() || isLoading || messagesRemaining <= 0) return
 
     setShowHint(false)
     setCurrentHint('')
@@ -79,7 +90,6 @@ export function ChatPage() {
     setInput('')
     setLoading(true)
 
-    // Add user message
     addMessage({
       id: Date.now().toString(),
       role: 'user',
@@ -88,7 +98,6 @@ export function ChatPage() {
     })
 
     try {
-      // Start session if needed
       let currentSessionId = sessionId
       if (!currentSessionId) {
         const session = await studyApi.startSession(profile?.tutorId || 'default')
@@ -96,10 +105,8 @@ export function ChatPage() {
         currentSessionId = session.sessionId
       }
 
-      // Send message
       const response = await studyApi.sendMessage(currentSessionId!, userMessage, subject)
 
-      // Add assistant message
       addMessage({
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -107,9 +114,12 @@ export function ChatPage() {
         timestamp: new Date(),
       })
 
-      // Add XP
-      addXP(response.xpEarned)
+      if (response.learningCore) {
+        setLastLearningCore(response.learningCore)
+      }
 
+      addXP(response.xpEarned)
+      decrementUsage()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Erro ao enviar mensagem')
     } finally {
@@ -131,6 +141,7 @@ export function ChatPage() {
 
   const handleNewChat = () => {
     clearChat()
+    setLastLearningCore(null)
     toast.success('Nova conversa iniciada!')
   }
 
@@ -144,11 +155,9 @@ export function ChatPage() {
 
   return (
     <div className="h-[calc(100vh-64px)] flex flex-col">
-      {/* Chat Header */}
       <div className="bg-white border-b border-slate-100 px-4 py-3">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
+        <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            {/* Subject Selector */}
             <div className="relative">
               <button
                 onClick={() => setShowSubjects(!showSubjects)}
@@ -185,34 +194,25 @@ export function ChatPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            {/* Streak */}
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="hidden sm:flex items-center gap-1 text-slate-500 text-sm">
+              <MessageCircle className="w-4 h-4" />
+              <span>{messagesRemaining}/{limit}</span>
+            </div>
             <div className="flex items-center gap-1 text-accent-600">
               <Flame className="w-5 h-5" />
               <span className="font-semibold">{profile.streak}</span>
             </div>
-
-            {/* XP */}
             <div className="flex items-center gap-1 text-primary-600">
               <Zap className="w-5 h-5" />
               <span className="font-semibold">{formatXP(profile.xp)}</span>
             </div>
-
-            {/* Level */}
-            <div className="px-3 py-1 rounded-full bg-primary-100 text-primary-700 font-semibold text-sm">
+            <div className="hidden sm:block px-3 py-1 rounded-full bg-primary-100 text-primary-700 font-semibold text-sm">
               {getLevelTitle(profile.level)}
             </div>
-
-            {/* New Chat */}
-            <button
-              onClick={handleNewChat}
-              className="btn-ghost p-2"
-              title="Nova conversa"
-            >
+            <button onClick={handleNewChat} className="btn-ghost p-2" title="Nova conversa">
               <MessageCircle className="w-5 h-5" />
             </button>
-
-            {/* Hint Button */}
             <button
               onClick={handleGetHint}
               disabled={!sessionId || messages.length === 0 || hintLoading}
@@ -225,24 +225,16 @@ export function ChatPage() {
         </div>
       </div>
 
-      {/* Messages Area */}
       <div className="flex-1 overflow-y-auto bg-slate-50">
-        <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
+        <div className="max-w-5xl mx-auto px-4 py-6 space-y-4">
           {messages.length === 0 && (
-            <WelcomeMessage
-              tutorId={profile.tutorId}
-              name={profile.name}
-              onSuggestedTopic={handleSuggestedTopic}
-            />
+            <WelcomeMessage tutorId={profile.tutorId} name={profile.name} onSuggestedTopic={handleSuggestedTopic} />
           )}
 
           {messages.map((message) => (
             <div
               key={message.id}
-              className={cn(
-                'flex animate-fade-in',
-                message.role === 'user' ? 'justify-end' : 'justify-start'
-              )}
+              className={cn('flex animate-fade-in', message.role === 'user' ? 'justify-end' : 'justify-start')}
             >
               {message.role === 'assistant' && (
                 <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white text-lg mr-3 flex-shrink-0">
@@ -255,10 +247,8 @@ export function ChatPage() {
 
               <div
                 className={cn(
-                  'max-w-[70%] px-4 py-3',
-                  message.role === 'user'
-                    ? 'message-bubble-user'
-                    : 'message-bubble-assistant'
+                  'max-w-[78%] px-4 py-3',
+                  message.role === 'user' ? 'message-bubble-user' : 'message-bubble-assistant'
                 )}
               >
                 <p className="whitespace-pre-wrap">{message.content}</p>
@@ -290,7 +280,6 @@ export function ChatPage() {
             </div>
           )}
 
-          {/* Hint Box */}
           {showHint && (
             <div className="flex justify-center">
               <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 max-w-md">
@@ -312,17 +301,23 @@ export function ChatPage() {
             </div>
           )}
 
+          {lastLearningCore && <LearningCorePanel core={lastLearningCore} />}
+
           <div ref={messagesEndRef} />
         </div>
       </div>
 
-      {/* Input Area */}
       <div className="bg-white border-t border-slate-100 px-4 py-4">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
+          {messagesRemaining <= 0 && (
+            <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              Limite diário atingido. Volte amanhã para continuar aprendendo. 🌟
+            </div>
+          )}
           <div className="flex items-end gap-3">
             <div className="flex-1 relative">
               <textarea
-                ref={inputRef as any}
+                ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -344,13 +339,9 @@ export function ChatPage() {
             <button
               onClick={handleSend}
               disabled={!input.trim() || isLoading || messagesRemaining <= 0}
-              className="btn-primary p-3 rounded-xl"
+              className="btn-primary p-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <Send className="w-5 h-5" />
-              )}
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
             </button>
           </div>
 
@@ -359,6 +350,55 @@ export function ChatPage() {
           </p>
         </div>
       </div>
+    </div>
+  )
+}
+
+interface LearningCorePanelProps {
+  core: LearningCoreMetadata
+}
+
+function LearningCorePanel({ core }: LearningCorePanelProps) {
+  const strategy = getCoreValue(core, 'Learning Strategy') || core.learningState || 'estratégia adaptativa'
+  const instruction = getCoreValue(core, 'Strategy Instruction') || core.flowZone || 'ajustando o próximo passo'
+  const subject = getCoreValue(core, 'Subject') || 'geral'
+  const frustration = getCoreValue(core, 'Frustration Signal') || 'no'
+  const curiosity = getCoreValue(core, 'Curiosity Signal') || 'no'
+
+  return (
+    <div className="rounded-2xl border border-primary-100 bg-white p-4 shadow-sm animate-fade-in">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-9 h-9 rounded-xl bg-primary-100 text-primary-700 flex items-center justify-center">
+          <Brain className="w-5 h-5" />
+        </div>
+        <div>
+          <p className="font-semibold text-slate-800">MindSteps Core em ação</p>
+          <p className="text-xs text-slate-500">Primeiros sinais pedagógicos visíveis para teste</p>
+        </div>
+      </div>
+
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <CoreCard icon={<Activity className="w-4 h-4" />} label="Estratégia" value={strategy} />
+        <CoreCard icon={<GraduationCap className="w-4 h-4" />} label="Matéria" value={subject} />
+        <CoreCard icon={<HeartHandshake className="w-4 h-4" />} label="Segurança" value={frustration === 'yes' ? 'precisa acolher' : 'estável'} />
+        <CoreCard icon={<Sparkles className="w-4 h-4" />} label="Curiosidade" value={curiosity === 'yes' ? 'ativa' : 'observando'} />
+      </div>
+
+      <p className="mt-3 text-sm text-slate-600">
+        Próximo movimento: <strong>{instruction}</strong>
+      </p>
+    </div>
+  )
+}
+
+function CoreCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-3">
+      <div className="flex items-center gap-2 text-slate-500 text-xs mb-1">
+        {icon}
+        <span>{label}</span>
+      </div>
+      <p className="text-sm font-semibold text-slate-800 line-clamp-2">{value}</p>
     </div>
   )
 }
