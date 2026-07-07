@@ -7,6 +7,7 @@ import { AuthPage } from '@/pages/Auth'
 import { OnboardingPage } from '@/pages/Onboarding'
 import { ChatPage } from '@/pages/Chat'
 import { ProfilePage } from '@/pages/Profile'
+import { LearningDashboardPage } from '@/pages/LearningDashboard'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore()
@@ -22,20 +23,16 @@ function App() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <Routes>
-        {/* Public routes with header/footer */}
         <Route path="/" element={<><Header /><HomePage /><Footer /></>} />
 
-        {/* Auth routes (no header) */}
         <Route path="/auth" element={<AuthPage />} />
 
-        {/* Onboarding */}
         <Route path="/onboarding" element={
           <ProtectedRoute>
             <OnboardingPage />
           </ProtectedRoute>
         } />
 
-        {/* Protected routes with header */}
         <Route path="/chat" element={
           <ProtectedRoute>
             <div className="flex flex-col min-h-screen">
@@ -43,6 +40,16 @@ function App() {
               <div className="flex-1">
                 <ChatPage />
               </div>
+            </div>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <div className="flex flex-col min-h-screen">
+              <Header />
+              <LearningDashboardPage />
+              <Footer />
             </div>
           </ProtectedRoute>
         } />
@@ -57,7 +64,6 @@ function App() {
           </ProtectedRoute>
         } />
 
-        {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
