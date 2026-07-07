@@ -21,6 +21,7 @@ import { generateTeacherInsights, summarizeTeacherInsights, type TeacherInsight 
 import { generateFamilyCompanionMessages, summarizeFamilyCompanionMessages, type FamilyCompanionMessage } from './familyCompanion';
 import { planInterventions, summarizeInterventionPlans, type InterventionPlan } from './interventionEngine';
 import { analyzeFlow, type FlowInsight } from './flowEngine';
+import { generateLearningDNA, summarizeLearningDNA, type LearningDNAProfile } from './learningDNA';
 
 export interface OrchestratorInput {
   learnerId: string;
@@ -42,6 +43,7 @@ export interface OrchestratorOutput {
   curiosity: CuriosityInsight;
   learningState: LearningState;
   flow: FlowInsight;
+  learningDNA: LearningDNAProfile;
   reflection: ReflectionPrompt;
   recommendations: LearningRecommendation[];
   nextJourneyStep: JourneyStep;
@@ -71,6 +73,7 @@ export function buildAiContext(params: {
   curiosity: CuriosityInsight;
   learningState: LearningState;
   flow: FlowInsight;
+  learningDNA: LearningDNAProfile;
   reflection: ReflectionPrompt;
   recommendations: LearningRecommendation[];
   nextJourneyStep: JourneyStep;
@@ -87,6 +90,7 @@ export function buildAiContext(params: {
     curiosity,
     learningState,
     flow,
+    learningDNA,
     reflection,
     recommendations,
     nextJourneyStep,
@@ -106,6 +110,7 @@ export function buildAiContext(params: {
   const teacherSummary = summarizeTeacherInsights(teacherInsights);
   const familySummary = summarizeFamilyCompanionMessages(familyMessages);
   const interventionSummary = summarizeInterventionPlans(interventions);
+  const dnaSummary = summarizeLearningDNA(learningDNA);
 
   return [
     'You are MindSteps, a learning companion powered by a pedagogical engine.',
@@ -116,6 +121,8 @@ export function buildAiContext(params: {
     `Subject: ${context.subject}`,
     `Cognitive Twin: ${twinSummary}`,
     `Learning Memory: ${memorySummary || 'No relevant long-term memory yet.'}`,
+    `Learning DNA: ${dnaSummary}`,
+    learningDNA.summary,
     '',
     `Selected Strategy: ${plan.strategy.type}`,
     `Goal: ${plan.strategy.goal}`,
@@ -166,6 +173,13 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     misconceptions,
   });
   const flow = analyzeFlow({ learningState, signals });
+  const learningDNA = generateLearningDNA({
+    learnerId: input.learnerId,
+    twin: updatedTwin,
+    memory: updatedMemory,
+    learningState,
+    flow,
+  });
   const reflection = createReflectionPrompt({
     subject: input.subject,
     twin: updatedTwin,
@@ -205,6 +219,7 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     curiosity,
     learningState,
     flow,
+    learningDNA,
     reflection,
     recommendations,
     nextJourneyStep,
@@ -225,6 +240,7 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     curiosity,
     learningState,
     flow,
+    learningDNA,
     reflection,
     recommendations,
     nextJourneyStep,
