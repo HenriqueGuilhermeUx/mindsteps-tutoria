@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/stores'
 import { cn } from '@/lib/utils'
-import { BookOpen, User, LogOut, LayoutDashboard } from 'lucide-react'
+import { BookOpen, User, LogOut, LayoutDashboard, GraduationCap } from 'lucide-react'
 
 interface HeaderProps {
   className?: string
@@ -31,9 +31,7 @@ export function Header({ className }: HeaderProps) {
                   to="/chat"
                   className={cn(
                     'px-3 sm:px-4 py-2 rounded-xl font-medium transition-colors',
-                    location.pathname === '/chat'
-                      ? 'bg-primary-100 text-primary-700'
-                      : 'text-slate-600 hover:bg-slate-100'
+                    location.pathname === '/chat' ? 'bg-primary-100 text-primary-700' : 'text-slate-600 hover:bg-slate-100'
                   )}
                 >
                   Chat
@@ -42,41 +40,39 @@ export function Header({ className }: HeaderProps) {
                   to="/dashboard"
                   className={cn(
                     'px-3 sm:px-4 py-2 rounded-xl font-medium transition-colors flex items-center gap-2',
-                    location.pathname === '/dashboard'
-                      ? 'bg-primary-100 text-primary-700'
-                      : 'text-slate-600 hover:bg-slate-100'
+                    location.pathname === '/dashboard' ? 'bg-primary-100 text-primary-700' : 'text-slate-600 hover:bg-slate-100'
                   )}
                 >
                   <LayoutDashboard className="w-4 h-4" />
-                  <span className="hidden sm:inline">Dashboard</span>
+                  <span className="hidden sm:inline">Aluno</span>
+                </Link>
+                <Link
+                  to="/professor"
+                  className={cn(
+                    'px-3 sm:px-4 py-2 rounded-xl font-medium transition-colors flex items-center gap-2',
+                    location.pathname === '/professor' ? 'bg-primary-100 text-primary-700' : 'text-slate-600 hover:bg-slate-100'
+                  )}
+                >
+                  <GraduationCap className="w-4 h-4" />
+                  <span className="hidden sm:inline">Professor</span>
                 </Link>
                 <Link
                   to="/perfil"
                   className={cn(
                     'p-2 rounded-xl transition-colors',
-                    location.pathname === '/perfil'
-                      ? 'bg-primary-100 text-primary-700'
-                      : 'text-slate-600 hover:bg-slate-100'
+                    location.pathname === '/perfil' ? 'bg-primary-100 text-primary-700' : 'text-slate-600 hover:bg-slate-100'
                   )}
                 >
                   <User className="w-5 h-5" />
                 </Link>
-                <button
-                  onClick={logout}
-                  className="p-2 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors"
-                  title="Logout"
-                >
+                <button onClick={logout} className="p-2 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors" title="Logout">
                   <LogOut className="w-5 h-5" />
                 </button>
               </>
             ) : (
               <>
-                <Link to="/auth" className="btn-ghost">
-                  Entrar
-                </Link>
-                <Link to="/auth?mode=register" className="btn-primary">
-                  Cadastrar
-                </Link>
+                <Link to="/auth" className="btn-ghost">Entrar</Link>
+                <Link to="/auth?mode=register" className="btn-primary">Cadastrar</Link>
               </>
             )}
           </nav>
