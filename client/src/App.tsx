@@ -10,6 +10,7 @@ import { ProfilePage } from '@/pages/Profile'
 import { LearningDashboardPage } from '@/pages/LearningDashboard'
 import { TeacherDashboardPage } from '@/pages/TeacherDashboard'
 import { LearningPassportPage } from '@/pages/LearningPassport'
+import { FamilyDashboardPage } from '@/pages/FamilyDashboard'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore()
@@ -32,6 +33,7 @@ function App() {
         <Route path="/dashboard" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><LearningDashboardPage /><Footer /></div></ProtectedRoute>} />
         <Route path="/passport" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><LearningPassportPage /><Footer /></div></ProtectedRoute>} />
         <Route path="/professor" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><TeacherDashboardPage /><Footer /></div></ProtectedRoute>} />
+        <Route path="/familia" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><FamilyDashboardPage /><Footer /></div></ProtectedRoute>} />
         <Route path="/perfil" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><ProfilePage /><Footer /></div></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
