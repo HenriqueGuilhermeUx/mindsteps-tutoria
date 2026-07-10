@@ -2,7 +2,7 @@ import type { LearningEvent, Subject } from './types';
 import type { LearningSignal } from './learningSignals';
 import type { MisconceptionPattern } from './misconceptionEngine';
 import type { InterventionPlan } from './interventionEngine';
-import type { PredictionResult } from './predictionEngine';
+import type { LearningPrediction } from './predictionEngine';
 
 export type EvidenceSource = 'event' | 'signal' | 'misconception' | 'prediction' | 'intervention';
 export type EvidenceStrength = 'weak' | 'moderate' | 'strong';
@@ -41,7 +41,7 @@ export function buildEvidenceBundle(params: {
   events?: LearningEvent[];
   signals?: LearningSignal[];
   misconceptions?: MisconceptionPattern[];
-  predictions?: PredictionResult[];
+  predictions?: LearningPrediction[];
   interventions?: InterventionPlan[];
 }): EvidenceBundle {
   const now = new Date().toISOString();
@@ -86,12 +86,12 @@ export function buildEvidenceBundle(params: {
 
   for (const prediction of params.predictions || []) {
     items.push({
-      id: `prediction:${prediction.conceptId}`,
+      id: `prediction:${prediction.conceptId || prediction.conceptTitle}`,
       source: 'prediction',
-      subject: params.subject,
-      claim: prediction.title,
-      evidence: prediction.reasons.join(' | '),
-      strength: strengthFromScore(prediction.riskScore / 10),
+      subject: prediction.subject,
+      claim: `Risco previsto em ${prediction.conceptTitle}`,
+      evidence: `${prediction.reason} Prevenção: ${prediction.recommendedPrevention}`,
+      strength: strengthFromScore(prediction.probability / 10),
       createdAt: now,
     });
   }
@@ -126,7 +126,7 @@ export function buildEvidenceBundle(params: {
 export function explainEvidence(bundle: EvidenceBundle, limit = 5): string {
   if (bundle.items.length === 0) return bundle.summary;
 
-  return bundle.items
+  return [...bundle.items]
     .sort((a, b) => {
       const order = { strong: 3, moderate: 2, weak: 1 };
       return order[b.strength] - order[a.strength];
