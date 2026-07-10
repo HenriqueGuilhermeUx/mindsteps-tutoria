@@ -11,6 +11,7 @@ import { LearningDashboardPage } from '@/pages/LearningDashboard'
 import { TeacherDashboardPage } from '@/pages/TeacherDashboard'
 import { LearningPassportPage } from '@/pages/LearningPassport'
 import { FamilyDashboardPage } from '@/pages/FamilyDashboard'
+import { LearningJourneyPage } from '@/pages/LearningJourney'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore()
@@ -31,6 +32,7 @@ function App() {
         <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
         <Route path="/chat" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><div className="flex-1"><ChatPage /></div></div></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><LearningDashboardPage /><Footer /></div></ProtectedRoute>} />
+        <Route path="/journey" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><LearningJourneyPage /><Footer /></div></ProtectedRoute>} />
         <Route path="/passport" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><LearningPassportPage /><Footer /></div></ProtectedRoute>} />
         <Route path="/professor" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><TeacherDashboardPage /><Footer /></div></ProtectedRoute>} />
         <Route path="/familia" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><FamilyDashboardPage /><Footer /></div></ProtectedRoute>} />
