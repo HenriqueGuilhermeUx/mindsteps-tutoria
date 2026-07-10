@@ -23,3 +23,4 @@ export * from './flowEngine';
 export * from './learningDNA';
 export * from './masteryEngine';
 export * from './predictionEngine';
+export * from './evidenceEngine';
