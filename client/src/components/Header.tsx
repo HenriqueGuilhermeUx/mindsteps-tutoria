@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/stores'
 import { cn } from '@/lib/utils'
-import { BookOpen, User, LogOut, LayoutDashboard, GraduationCap, Award, HeartHandshake } from 'lucide-react'
+import { BookOpen, User, LogOut, LayoutDashboard, GraduationCap, Award, HeartHandshake, Map } from 'lucide-react'
 
 interface HeaderProps {
   className?: string
@@ -34,17 +34,21 @@ export function Header({ className }: HeaderProps) {
                   <LayoutDashboard className="w-4 h-4" />
                   <span className="hidden md:inline">Aluno</span>
                 </Link>
+                <Link to="/journey" className={cn('px-3 sm:px-4 py-2 rounded-xl font-medium transition-colors flex items-center gap-2', location.pathname === '/journey' ? 'bg-primary-100 text-primary-700' : 'text-slate-600 hover:bg-slate-100')}>
+                  <Map className="w-4 h-4" />
+                  <span className="hidden lg:inline">Jornada</span>
+                </Link>
                 <Link to="/passport" className={cn('px-3 sm:px-4 py-2 rounded-xl font-medium transition-colors flex items-center gap-2', location.pathname === '/passport' ? 'bg-primary-100 text-primary-700' : 'text-slate-600 hover:bg-slate-100')}>
                   <Award className="w-4 h-4" />
                   <span className="hidden lg:inline">Passport</span>
                 </Link>
                 <Link to="/professor" className={cn('px-3 sm:px-4 py-2 rounded-xl font-medium transition-colors flex items-center gap-2', location.pathname === '/professor' ? 'bg-primary-100 text-primary-700' : 'text-slate-600 hover:bg-slate-100')}>
                   <GraduationCap className="w-4 h-4" />
-                  <span className="hidden lg:inline">Professor</span>
+                  <span className="hidden xl:inline">Professor</span>
                 </Link>
                 <Link to="/familia" className={cn('px-3 sm:px-4 py-2 rounded-xl font-medium transition-colors flex items-center gap-2', location.pathname === '/familia' ? 'bg-primary-100 text-primary-700' : 'text-slate-600 hover:bg-slate-100')}>
                   <HeartHandshake className="w-4 h-4" />
-                  <span className="hidden lg:inline">Família</span>
+                  <span className="hidden xl:inline">Família</span>
                 </Link>
                 <Link to="/perfil" className={cn('p-2 rounded-xl transition-colors', location.pathname === '/perfil' ? 'bg-primary-100 text-primary-700' : 'text-slate-600 hover:bg-slate-100')}>
                   <User className="w-5 h-5" />
