@@ -22,6 +22,8 @@ import { generateFamilyCompanionMessages, summarizeFamilyCompanionMessages, type
 import { planInterventions, summarizeInterventionPlans, type InterventionPlan } from './interventionEngine';
 import { analyzeFlow, type FlowInsight } from './flowEngine';
 import { generateLearningDNA, summarizeLearningDNA, type LearningDNAProfile } from './learningDNA';
+import { BASIC_LEARNING_GRAPH } from './learningGraph';
+import { predictLearningRisks, summarizeLearningPredictions, type LearningPrediction } from './predictionEngine';
 
 export interface OrchestratorInput {
   learnerId: string;
@@ -44,6 +46,7 @@ export interface OrchestratorOutput {
   learningState: LearningState;
   flow: FlowInsight;
   learningDNA: LearningDNAProfile;
+  predictions: LearningPrediction[];
   reflection: ReflectionPrompt;
   recommendations: LearningRecommendation[];
   nextJourneyStep: JourneyStep;
@@ -74,6 +77,7 @@ export function buildAiContext(params: {
   learningState: LearningState;
   flow: FlowInsight;
   learningDNA: LearningDNAProfile;
+  predictions: LearningPrediction[];
   reflection: ReflectionPrompt;
   recommendations: LearningRecommendation[];
   nextJourneyStep: JourneyStep;
@@ -91,6 +95,7 @@ export function buildAiContext(params: {
     learningState,
     flow,
     learningDNA,
+    predictions,
     reflection,
     recommendations,
     nextJourneyStep,
@@ -111,6 +116,7 @@ export function buildAiContext(params: {
   const familySummary = summarizeFamilyCompanionMessages(familyMessages);
   const interventionSummary = summarizeInterventionPlans(interventions);
   const dnaSummary = summarizeLearningDNA(learningDNA);
+  const predictionSummary = summarizeLearningPredictions(predictions);
 
   return [
     'You are MindSteps, a learning companion powered by a pedagogical engine.',
@@ -134,6 +140,7 @@ export function buildAiContext(params: {
     `Learning State: ${learningState.label}. ${learningState.recommendedTeachingMove}`,
     `Learning Energy: ${learningState.energy}. Cognitive Load: ${learningState.cognitiveLoad}/10. Persistence: ${learningState.persistence}/10.`,
     `Flow Zone: ${flow.zone}. ${flow.recommendedAdjustment}`,
+    `Predicted Risks: ${predictionSummary}`,
     `Confidence State: ${confidence.state}. ${confidence.recommendedAction}`,
     `Curiosity State: ${curiosity.state}. ${curiosity.recommendedAction}`,
     `Misconceptions: ${misconceptionSummary}`,
@@ -173,6 +180,13 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     misconceptions,
   });
   const flow = analyzeFlow({ learningState, signals });
+  const predictions = predictLearningRisks({
+    subject: input.subject,
+    learningState,
+    flow,
+    misconceptions,
+    graph: BASIC_LEARNING_GRAPH,
+  });
   const learningDNA = generateLearningDNA({
     learnerId: input.learnerId,
     twin: updatedTwin,
@@ -220,6 +234,7 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     learningState,
     flow,
     learningDNA,
+    predictions,
     reflection,
     recommendations,
     nextJourneyStep,
@@ -241,6 +256,7 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     learningState,
     flow,
     learningDNA,
+    predictions,
     reflection,
     recommendations,
     nextJourneyStep,
