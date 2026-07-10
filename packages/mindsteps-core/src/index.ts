@@ -21,3 +21,4 @@ export * from './learningGraph';
 export * from './interventionEngine';
 export * from './flowEngine';
 export * from './learningDNA';
+export * from './masteryEngine';
