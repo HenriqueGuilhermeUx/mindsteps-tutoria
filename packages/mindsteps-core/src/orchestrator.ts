@@ -24,6 +24,7 @@ import { analyzeFlow, type FlowInsight } from './flowEngine';
 import { generateLearningDNA, summarizeLearningDNA, type LearningDNAProfile } from './learningDNA';
 import { BASIC_LEARNING_GRAPH } from './learningGraph';
 import { predictLearningRisks, summarizeLearningPredictions, type LearningPrediction } from './predictionEngine';
+import { buildEvidenceBundle, explainEvidence, type EvidenceBundle } from './evidenceEngine';
 
 export interface OrchestratorInput {
   learnerId: string;
@@ -47,6 +48,7 @@ export interface OrchestratorOutput {
   flow: FlowInsight;
   learningDNA: LearningDNAProfile;
   predictions: LearningPrediction[];
+  evidence: EvidenceBundle;
   reflection: ReflectionPrompt;
   recommendations: LearningRecommendation[];
   nextJourneyStep: JourneyStep;
@@ -78,6 +80,7 @@ export function buildAiContext(params: {
   flow: FlowInsight;
   learningDNA: LearningDNAProfile;
   predictions: LearningPrediction[];
+  evidence: EvidenceBundle;
   reflection: ReflectionPrompt;
   recommendations: LearningRecommendation[];
   nextJourneyStep: JourneyStep;
@@ -96,6 +99,7 @@ export function buildAiContext(params: {
     flow,
     learningDNA,
     predictions,
+    evidence,
     reflection,
     recommendations,
     nextJourneyStep,
@@ -117,11 +121,13 @@ export function buildAiContext(params: {
   const interventionSummary = summarizeInterventionPlans(interventions);
   const dnaSummary = summarizeLearningDNA(learningDNA);
   const predictionSummary = summarizeLearningPredictions(predictions);
+  const evidenceSummary = explainEvidence(evidence, 4);
 
   return [
     'You are MindSteps, a learning companion powered by a pedagogical engine.',
     'Never give a direct answer when the learner can be guided to think.',
     'Use the selected pedagogical strategy and learning insights below.',
+    'Treat hypotheses as provisional and do not label the learner permanently.',
     '',
     `Learner: ${context.learnerName || context.learnerId}`,
     `Subject: ${context.subject}`,
@@ -141,6 +147,8 @@ export function buildAiContext(params: {
     `Learning Energy: ${learningState.energy}. Cognitive Load: ${learningState.cognitiveLoad}/10. Persistence: ${learningState.persistence}/10.`,
     `Flow Zone: ${flow.zone}. ${flow.recommendedAdjustment}`,
     `Predicted Risks: ${predictionSummary}`,
+    `Evidence Confidence: ${evidence.confidenceScore}/10. ${evidence.summary}`,
+    `Evidence Trail: ${evidenceSummary}`,
     `Confidence State: ${confidence.state}. ${confidence.recommendedAction}`,
     `Curiosity State: ${curiosity.state}. ${curiosity.recommendedAction}`,
     `Misconceptions: ${misconceptionSummary}`,
@@ -226,6 +234,15 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     teacherInsights,
     familyMessages,
   });
+  const evidence = buildEvidenceBundle({
+    learnerId: input.learnerId,
+    subject: input.subject,
+    events,
+    signals,
+    misconceptions,
+    predictions,
+    interventions,
+  });
   const aiContext = buildAiContext({
     context: { ...context, cognitiveTwin: updatedTwin, learningMemory: updatedMemory },
     plan,
@@ -235,6 +252,7 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     flow,
     learningDNA,
     predictions,
+    evidence,
     reflection,
     recommendations,
     nextJourneyStep,
@@ -257,6 +275,7 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     flow,
     learningDNA,
     predictions,
+    evidence,
     reflection,
     recommendations,
     nextJourneyStep,
