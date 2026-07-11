@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Award, Brain, Building2, CheckCircle2, ClipboardCheck, Eye, FlaskConical, GraduationCap, HeartHandshake, Map, MessageCircle, Rocket, ShieldCheck, SlidersHorizontal, Target } from 'lucide-react'
+import { Award, Brain, Building2, CheckCircle2, ClipboardCheck, Eye, FlaskConical, GraduationCap, HeartHandshake, Map, MessageCircle, Network, Rocket, ShieldCheck, SlidersHorizontal, Target } from 'lucide-react'
 
 const TESTS = [
   {
@@ -21,6 +21,13 @@ const TESTS = [
     description: 'Explore a visão consolidada de turmas, alertas, confiança e oportunidades.',
     route: '/escola',
     icon: Building2,
+    status: 'Público',
+  },
+  {
+    title: 'Network Intelligence',
+    description: 'Veja como uma secretaria ou rede acompanha escolas, regiões e prioridades sistêmicas.',
+    route: '/rede',
+    icon: Network,
     status: 'Público',
   },
   {
@@ -93,17 +100,18 @@ export function TestLabPage() {
     <main className="flex-1 bg-slate-50">
       <section className="bg-gradient-to-br from-slate-950 via-primary-900 to-secondary-900 text-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-14 sm:py-20">
-          <div className="max-w-3xl">
+          <div className="max-w-4xl">
             <p className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/10 px-4 py-2 text-sm mb-5">
               <FlaskConical className="w-4 h-4" /> MindSteps Alpha Lab
             </p>
             <h1 className="text-4xl sm:text-5xl font-bold leading-tight mb-5">O produto já está aberto para testes internos.</h1>
             <p className="text-lg text-slate-200 leading-relaxed">
-              Agora existem demonstrações públicas para inteligência individual, cenários e visão escolar. Para testar as áreas pessoais, crie uma conta e percorra as experiências abaixo.
+              O Alpha agora demonstra toda a cadeia de inteligência: aluno, professor, família, escola e rede de ensino. As áreas públicas podem ser abertas sem login.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 mt-7">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 mt-7">
               <Link to="/simulador" className="inline-flex items-center justify-center rounded-xl bg-white text-primary-800 px-6 py-3 font-bold hover:bg-primary-50 transition-colors">Abrir simulador público</Link>
-              <Link to="/escola" className="inline-flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-white px-6 py-3 font-bold hover:bg-white/15 transition-colors">Ver School Intelligence</Link>
+              <Link to="/escola" className="inline-flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-white px-6 py-3 font-bold hover:bg-white/15 transition-colors">Ver escola</Link>
+              <Link to="/rede" className="inline-flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-white px-6 py-3 font-bold hover:bg-white/15 transition-colors">Ver rede de ensino</Link>
               <Link to="/feedback" className="inline-flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-white px-6 py-3 font-bold hover:bg-white/15 transition-colors">Registrar avaliação</Link>
             </div>
           </div>
@@ -119,7 +127,7 @@ export function TestLabPage() {
             <div>
               <h2 className="font-bold text-slate-900">Como testar melhor</h2>
               <p className="text-sm text-slate-600 mt-1">
-                Comece pelas áreas públicas. Depois crie uma conta, use perguntas reais, simule dificuldade, peça dicas e navegue pelas telas. Ao terminar, registre tudo no Feedback Lab.
+                Comece pelas áreas públicas e compare os diferentes níveis de decisão. Depois crie uma conta, converse com o Tutor, simule dificuldade e percorra as experiências pessoais. Ao terminar, registre tudo no Feedback Lab.
               </p>
             </div>
           </div>
