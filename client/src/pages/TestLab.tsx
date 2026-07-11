@@ -1,7 +1,14 @@
 import { Link } from 'react-router-dom'
-import { Award, Brain, CheckCircle2, FlaskConical, GraduationCap, HeartHandshake, Map, MessageCircle, Rocket, ShieldCheck, Target } from 'lucide-react'
+import { Award, Brain, CheckCircle2, Eye, FlaskConical, GraduationCap, HeartHandshake, Map, MessageCircle, Rocket, ShieldCheck, Target } from 'lucide-react'
 
 const TESTS = [
+  {
+    title: 'Intelligence Lab',
+    description: 'Veja previsões, evidências e o raciocínio pedagógico do Core sem precisar entrar.',
+    route: '/inteligencia',
+    icon: Eye,
+    status: 'Público',
+  },
   {
     title: 'Tutor Socrático',
     description: 'Converse com a IA e observe perguntas, dicas e sinais do Core.',
@@ -73,14 +80,14 @@ export function TestLabPage() {
               O produto já está aberto para testes internos.
             </h1>
             <p className="text-lg text-slate-200 leading-relaxed">
-              Crie uma conta, entre no ambiente e percorra as experiências abaixo. Algumas telas ainda usam dados demonstrativos enquanto conectamos todo o produto ao MindSteps Core.
+              Agora também existe uma demonstração pública da inteligência pedagógica. Para testar as áreas pessoais, crie uma conta e percorra as experiências abaixo.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 mt-7">
-              <Link to="/auth?mode=register" className="inline-flex items-center justify-center rounded-xl bg-white text-primary-800 px-6 py-3 font-bold hover:bg-primary-50 transition-colors">
-                Criar conta de teste
+              <Link to="/inteligencia" className="inline-flex items-center justify-center rounded-xl bg-white text-primary-800 px-6 py-3 font-bold hover:bg-primary-50 transition-colors">
+                Ver inteligência do Core
               </Link>
-              <Link to="/auth" className="inline-flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-white px-6 py-3 font-bold hover:bg-white/15 transition-colors">
-                Entrar no Alpha
+              <Link to="/auth?mode=register" className="inline-flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-white px-6 py-3 font-bold hover:bg-white/15 transition-colors">
+                Criar conta de teste
               </Link>
             </div>
           </div>
@@ -96,7 +103,7 @@ export function TestLabPage() {
             <div>
               <h2 className="font-bold text-slate-900">Como testar melhor</h2>
               <p className="text-sm text-slate-600 mt-1">
-                Use perguntas reais, simule dificuldade, peça dicas e navegue pelas telas. O objetivo agora é validar clareza, utilidade, linguagem, fluxo e sensação de produto.
+                Comece pelo Intelligence Lab sem login. Depois crie uma conta, use perguntas reais, simule dificuldade, peça dicas e navegue pelas telas. O objetivo é validar clareza, utilidade, linguagem, fluxo e sensação de produto.
               </p>
             </div>
           </div>
