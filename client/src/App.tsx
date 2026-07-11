@@ -19,6 +19,7 @@ import { IntelligenceLabPage } from '@/pages/IntelligenceLab'
 import { ScenarioSimulatorPage } from '@/pages/ScenarioSimulator'
 import { FeedbackLabPage } from '@/pages/FeedbackLab'
 import { SchoolDashboardPage } from '@/pages/SchoolDashboard'
+import { NetworkDashboardPage } from '@/pages/NetworkDashboard'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore()
@@ -40,6 +41,7 @@ function App() {
         <Route path="/simulador" element={<><Header /><ScenarioSimulatorPage /><Footer /></>} />
         <Route path="/feedback" element={<><Header /><FeedbackLabPage /><Footer /></>} />
         <Route path="/escola" element={<><Header /><SchoolDashboardPage /><Footer /></>} />
+        <Route path="/rede" element={<><Header /><NetworkDashboardPage /><Footer /></>} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
         <Route path="/chat" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><div className="flex-1"><ChatPage /></div></div></ProtectedRoute>} />
