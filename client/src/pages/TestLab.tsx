@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Award, Brain, CheckCircle2, ClipboardCheck, Eye, FlaskConical, GraduationCap, HeartHandshake, Map, MessageCircle, Rocket, ShieldCheck, SlidersHorizontal, Target } from 'lucide-react'
+import { Award, Brain, Building2, CheckCircle2, ClipboardCheck, Eye, FlaskConical, GraduationCap, HeartHandshake, Map, MessageCircle, Rocket, ShieldCheck, SlidersHorizontal, Target } from 'lucide-react'
 
 const TESTS = [
   {
@@ -14,6 +14,13 @@ const TESTS = [
     description: 'Veja previsões, evidências e o raciocínio pedagógico do Core sem precisar entrar.',
     route: '/inteligencia',
     icon: Eye,
+    status: 'Público',
+  },
+  {
+    title: 'School Intelligence',
+    description: 'Explore a visão consolidada de turmas, alertas, confiança e oportunidades.',
+    route: '/escola',
+    icon: Building2,
     status: 'Público',
   },
   {
@@ -90,22 +97,14 @@ export function TestLabPage() {
             <p className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/10 px-4 py-2 text-sm mb-5">
               <FlaskConical className="w-4 h-4" /> MindSteps Alpha Lab
             </p>
-            <h1 className="text-4xl sm:text-5xl font-bold leading-tight mb-5">
-              O produto já está aberto para testes internos.
-            </h1>
+            <h1 className="text-4xl sm:text-5xl font-bold leading-tight mb-5">O produto já está aberto para testes internos.</h1>
             <p className="text-lg text-slate-200 leading-relaxed">
-              Agora existem demonstrações públicas, simulador de cenários e coleta estruturada de feedback. Para testar as áreas pessoais, crie uma conta e percorra as experiências abaixo.
+              Agora existem demonstrações públicas para inteligência individual, cenários e visão escolar. Para testar as áreas pessoais, crie uma conta e percorra as experiências abaixo.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 mt-7">
-              <Link to="/simulador" className="inline-flex items-center justify-center rounded-xl bg-white text-primary-800 px-6 py-3 font-bold hover:bg-primary-50 transition-colors">
-                Abrir simulador público
-              </Link>
-              <Link to="/feedback" className="inline-flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-white px-6 py-3 font-bold hover:bg-white/15 transition-colors">
-                Registrar avaliação
-              </Link>
-              <Link to="/auth?mode=register" className="inline-flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-white px-6 py-3 font-bold hover:bg-white/15 transition-colors">
-                Criar conta de teste
-              </Link>
+              <Link to="/simulador" className="inline-flex items-center justify-center rounded-xl bg-white text-primary-800 px-6 py-3 font-bold hover:bg-primary-50 transition-colors">Abrir simulador público</Link>
+              <Link to="/escola" className="inline-flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-white px-6 py-3 font-bold hover:bg-white/15 transition-colors">Ver School Intelligence</Link>
+              <Link to="/feedback" className="inline-flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-white px-6 py-3 font-bold hover:bg-white/15 transition-colors">Registrar avaliação</Link>
             </div>
           </div>
         </div>
@@ -120,7 +119,7 @@ export function TestLabPage() {
             <div>
               <h2 className="font-bold text-slate-900">Como testar melhor</h2>
               <p className="text-sm text-slate-600 mt-1">
-                Comece pelo Simulador e pelo Intelligence Lab sem login. Depois crie uma conta, use perguntas reais, simule dificuldade, peça dicas e navegue pelas telas. Ao terminar, registre tudo no Feedback Lab.
+                Comece pelas áreas públicas. Depois crie uma conta, use perguntas reais, simule dificuldade, peça dicas e navegue pelas telas. Ao terminar, registre tudo no Feedback Lab.
               </p>
             </div>
           </div>
@@ -132,12 +131,8 @@ export function TestLabPage() {
             return (
               <div key={test.route} className="rounded-3xl bg-white border border-slate-100 shadow-sm p-5 flex flex-col">
                 <div className="flex items-start justify-between gap-3 mb-4">
-                  <div className="w-11 h-11 rounded-2xl bg-primary-100 text-primary-700 flex items-center justify-center">
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <span className="rounded-full bg-emerald-50 text-emerald-700 px-3 py-1 text-xs font-bold">
-                    {test.status}
-                  </span>
+                  <div className="w-11 h-11 rounded-2xl bg-primary-100 text-primary-700 flex items-center justify-center"><Icon className="w-5 h-5" /></div>
+                  <span className="rounded-full bg-emerald-50 text-emerald-700 px-3 py-1 text-xs font-bold">{test.status}</span>
                 </div>
                 <h3 className="font-bold text-slate-900 text-lg">{test.title}</h3>
                 <p className="text-sm text-slate-600 mt-2 flex-1">{test.description}</p>
