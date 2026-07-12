@@ -71,9 +71,20 @@ export function Footer() {
           <FooterSignal icon={<Network className="w-5 h-5" />} title="Para redes" text="Visão sistêmica com prioridade pedagógica." />
         </div>
 
-        <div className="border-t border-slate-800 mt-10 pt-7 flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-xs text-slate-500">
+        <div className="mt-10 rounded-2xl border border-slate-800 bg-slate-900/60 px-5 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold text-white">Desenvolvido por Alternative Ventures Ltda.</p>
+            <p className="text-xs text-slate-500 mt-1">CNPJ 61.920.356/0001-38</p>
+          </div>
+          <Link to="/empresa" className="inline-flex items-center gap-2 text-sm font-semibold text-primary-300 hover:text-white transition-colors">
+            <Building2 className="w-4 h-4" /> Conhecer a empresa desenvolvedora
+          </Link>
+        </div>
+
+        <div className="border-t border-slate-800 mt-7 pt-7 flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-xs text-slate-500">
           <p>© {new Date().getFullYear()} MindSteps. Inteligência pedagógica para aprendizagem real.</p>
           <div className="flex flex-wrap gap-4">
+            <Link to="/empresa" className="hover:text-white transition-colors">Alternative Ventures</Link>
             <Link to="/feedback" className="hover:text-white transition-colors">Enviar feedback</Link>
             <Link to="/protocolo" className="hover:text-white transition-colors">Roteiro de testes</Link>
             <Link to="/pesquisa" className="hover:text-white transition-colors">Pesquisa educacional</Link>
