@@ -26,6 +26,7 @@ import { TestProtocolPage } from '@/pages/TestProtocol'
 import { CompanyPage } from '@/pages/Company'
 import { RoadmapPage } from '@/pages/Roadmap'
 import { SafetyPage } from '@/pages/Safety'
+import { AccessibilityPage } from '@/pages/Accessibility'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore()
@@ -45,6 +46,7 @@ function App() {
         <Route path="/empresa" element={<><Header /><CompanyPage /><Footer /></>} />
         <Route path="/roadmap" element={<><Header /><RoadmapPage /><Footer /></>} />
         <Route path="/seguranca" element={<><Header /><SafetyPage /><Footer /></>} />
+        <Route path="/acessibilidade" element={<><Header /><AccessibilityPage /><Footer /></>} />
         <Route path="/testes" element={<><Header /><TestLabPage /><Footer /></>} />
         <Route path="/protocolo" element={<><Header /><TestProtocolPage /><Footer /></>} />
         <Route path="/inteligencia" element={<><Header /><IntelligenceLabPage /><Footer /></>} />
