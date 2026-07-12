@@ -1,7 +1,14 @@
 import { Link } from 'react-router-dom'
-import { Award, Beaker, Brain, Building2, CheckCircle2, ClipboardCheck, Eye, Flag, FlaskConical, GraduationCap, HeartHandshake, Map, MessageCircle, Network, Rocket, ShieldCheck, SlidersHorizontal, Target } from 'lucide-react'
+import { Award, Beaker, Brain, Building2, CheckCircle2, ClipboardCheck, ClipboardList, Eye, Flag, FlaskConical, GraduationCap, HeartHandshake, Map, MessageCircle, Network, Rocket, ShieldCheck, SlidersHorizontal, Target } from 'lucide-react'
 
 const TESTS = [
+  {
+    title: 'Protocolo de Testes',
+    description: 'Siga um roteiro completo, marque etapas e acompanhe o progresso salvo no navegador.',
+    route: '/protocolo',
+    icon: ClipboardList,
+    status: 'Novo',
+  },
   {
     title: 'Pilot Readiness Center',
     description: 'Veja o plano para sair do Alpha e chegar ao primeiro piloto real com segurança.',
@@ -120,12 +127,11 @@ export function TestLabPage() {
             </p>
             <h1 className="text-4xl sm:text-5xl font-bold leading-tight mb-5">O produto já está aberto para testes internos.</h1>
             <p className="text-lg text-slate-200 leading-relaxed">
-              O Alpha demonstra a cadeia completa de inteligência e agora também mostra o caminho estruturado até o primeiro piloto real. As áreas públicas podem ser abertas sem login.
+              Agora existe um protocolo guiado para percorrer o produto inteiro, marcar etapas e transformar a navegação em evidências úteis para desenvolvimento.
             </p>
             <div className="flex flex-col sm:flex-row flex-wrap gap-3 mt-7">
-              <Link to="/piloto" className="inline-flex items-center justify-center rounded-xl bg-white text-primary-800 px-6 py-3 font-bold hover:bg-primary-50 transition-colors">Ver plano do piloto</Link>
-              <Link to="/simulador" className="inline-flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-white px-6 py-3 font-bold hover:bg-white/15 transition-colors">Abrir simulador</Link>
-              <Link to="/pesquisa" className="inline-flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-white px-6 py-3 font-bold hover:bg-white/15 transition-colors">Ver Learning Research</Link>
+              <Link to="/protocolo" className="inline-flex items-center justify-center rounded-xl bg-white text-primary-800 px-6 py-3 font-bold hover:bg-primary-50 transition-colors">Começar protocolo de testes</Link>
+              <Link to="/piloto" className="inline-flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-white px-6 py-3 font-bold hover:bg-white/15 transition-colors">Ver plano do piloto</Link>
               <Link to="/feedback" className="inline-flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-white px-6 py-3 font-bold hover:bg-white/15 transition-colors">Registrar avaliação</Link>
             </div>
           </div>
@@ -141,7 +147,7 @@ export function TestLabPage() {
             <div>
               <h2 className="font-bold text-slate-900">Como testar melhor</h2>
               <p className="text-sm text-slate-600 mt-1">
-                Comece pelo Pilot Center para entender os objetivos. Depois percorra as áreas públicas, crie uma conta, converse com o Tutor e simule dificuldade. Ao terminar, registre tudo no Feedback Lab.
+                Comece pelo Protocolo de Testes. Ele organiza cadastro, Tutor Socrático, dica, painel, jornada, missões, inteligência e feedback em uma única sequência.
               </p>
             </div>
           </div>
