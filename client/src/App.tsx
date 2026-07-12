@@ -22,6 +22,7 @@ import { SchoolDashboardPage } from '@/pages/SchoolDashboard'
 import { NetworkDashboardPage } from '@/pages/NetworkDashboard'
 import { ResearchDashboardPage } from '@/pages/ResearchDashboard'
 import { PilotCenterPage } from '@/pages/PilotCenter'
+import { TestProtocolPage } from '@/pages/TestProtocol'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore()
@@ -39,6 +40,7 @@ function App() {
       <Routes>
         <Route path="/" element={<><Header /><HomePage /><Footer /></>} />
         <Route path="/testes" element={<><Header /><TestLabPage /><Footer /></>} />
+        <Route path="/protocolo" element={<><Header /><TestProtocolPage /><Footer /></>} />
         <Route path="/inteligencia" element={<><Header /><IntelligenceLabPage /><Footer /></>} />
         <Route path="/simulador" element={<><Header /><ScenarioSimulatorPage /><Footer /></>} />
         <Route path="/feedback" element={<><Header /><FeedbackLabPage /><Footer /></>} />
