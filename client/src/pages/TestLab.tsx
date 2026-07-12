@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Award, Brain, Building2, CheckCircle2, ClipboardCheck, Eye, FlaskConical, GraduationCap, HeartHandshake, Map, MessageCircle, Network, Rocket, ShieldCheck, SlidersHorizontal, Target } from 'lucide-react'
+import { Award, Beaker, Brain, Building2, CheckCircle2, ClipboardCheck, Eye, FlaskConical, GraduationCap, HeartHandshake, Map, MessageCircle, Network, Rocket, ShieldCheck, SlidersHorizontal, Target } from 'lucide-react'
 
 const TESTS = [
   {
@@ -14,6 +14,13 @@ const TESTS = [
     description: 'Veja previsões, evidências e o raciocínio pedagógico do Core sem precisar entrar.',
     route: '/inteligencia',
     icon: Eye,
+    status: 'Público',
+  },
+  {
+    title: 'Learning Research',
+    description: 'Explore perguntas de pesquisa, coortes e hipóteses pedagógicas agregadas.',
+    route: '/pesquisa',
+    icon: Beaker,
     status: 'Público',
   },
   {
@@ -106,11 +113,11 @@ export function TestLabPage() {
             </p>
             <h1 className="text-4xl sm:text-5xl font-bold leading-tight mb-5">O produto já está aberto para testes internos.</h1>
             <p className="text-lg text-slate-200 leading-relaxed">
-              O Alpha agora demonstra toda a cadeia de inteligência: aluno, professor, família, escola e rede de ensino. As áreas públicas podem ser abertas sem login.
+              O Alpha demonstra a cadeia completa de inteligência: aluno, professor, família, escola, rede de ensino e pesquisa educacional. As áreas públicas podem ser abertas sem login.
             </p>
             <div className="flex flex-col sm:flex-row flex-wrap gap-3 mt-7">
               <Link to="/simulador" className="inline-flex items-center justify-center rounded-xl bg-white text-primary-800 px-6 py-3 font-bold hover:bg-primary-50 transition-colors">Abrir simulador público</Link>
-              <Link to="/escola" className="inline-flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-white px-6 py-3 font-bold hover:bg-white/15 transition-colors">Ver escola</Link>
+              <Link to="/pesquisa" className="inline-flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-white px-6 py-3 font-bold hover:bg-white/15 transition-colors">Ver Learning Research</Link>
               <Link to="/rede" className="inline-flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-white px-6 py-3 font-bold hover:bg-white/15 transition-colors">Ver rede de ensino</Link>
               <Link to="/feedback" className="inline-flex items-center justify-center rounded-xl bg-white/10 border border-white/15 text-white px-6 py-3 font-bold hover:bg-white/15 transition-colors">Registrar avaliação</Link>
             </div>
