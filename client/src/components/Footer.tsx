@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Beaker, BookOpen, Brain, Building2, Flag, GraduationCap, HeartHandshake, Network, Rocket, ShieldCheck, Sparkles } from 'lucide-react'
+import { Beaker, BookOpen, Brain, Building2, Flag, GraduationCap, HeartHandshake, Map, Network, Rocket, ShieldCheck, Sparkles } from 'lucide-react'
 
 const PRODUCT_LINKS = [
   { label: 'Tutor Socrático', route: '/chat' },
@@ -17,6 +17,7 @@ const ECOSYSTEM_LINKS = [
 ]
 
 const LAB_LINKS = [
+  { label: 'Roadmap público', route: '/roadmap' },
   { label: 'Alpha Lab', route: '/testes' },
   { label: 'Intelligence Lab', route: '/inteligencia' },
   { label: 'Simulador', route: '/simulador' },
@@ -54,8 +55,8 @@ export function Footer() {
               <Link to="/testes" className="inline-flex items-center gap-2 rounded-xl bg-white text-slate-950 px-4 py-2.5 text-sm font-bold hover:bg-slate-100 transition-colors">
                 <Rocket className="w-4 h-4" /> Explorar Alpha
               </Link>
-              <Link to="/piloto" className="inline-flex items-center gap-2 rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-slate-900 transition-colors">
-                <Flag className="w-4 h-4" /> Plano do piloto
+              <Link to="/roadmap" className="inline-flex items-center gap-2 rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-slate-900 transition-colors">
+                <Map className="w-4 h-4" /> Ver roadmap
               </Link>
             </div>
           </div>
@@ -85,6 +86,7 @@ export function Footer() {
           <p>© {new Date().getFullYear()} MindSteps. Inteligência pedagógica para aprendizagem real.</p>
           <div className="flex flex-wrap gap-4">
             <Link to="/empresa" className="hover:text-white transition-colors">Alternative Ventures</Link>
+            <Link to="/roadmap" className="hover:text-white transition-colors">Roadmap</Link>
             <Link to="/feedback" className="hover:text-white transition-colors">Enviar feedback</Link>
             <Link to="/protocolo" className="hover:text-white transition-colors">Roteiro de testes</Link>
             <Link to="/pesquisa" className="hover:text-white transition-colors">Pesquisa educacional</Link>
