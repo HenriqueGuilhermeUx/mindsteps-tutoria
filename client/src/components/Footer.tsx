@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom'
-import { Accessibility, Beaker, BookOpen, Brain, Building2, GraduationCap, HeartHandshake, Network, Rocket, ShieldCheck, Sparkles } from 'lucide-react'
+import { Accessibility, Beaker, BookOpen, Brain, Building2, Dna, GraduationCap, HeartHandshake, Network, Rocket, ShieldCheck, Sparkles } from 'lucide-react'
 
 const PRODUCT_LINKS = [
   { label: 'Tutor Socrático', route: '/chat' },
   { label: 'Painel do Aluno', route: '/dashboard' },
+  { label: 'Learning Genome', route: '/genoma' },
   { label: 'Learning Passport', route: '/passport' },
   { label: 'Jornada', route: '/journey' },
   { label: 'Missões', route: '/missoes' },
@@ -49,16 +50,17 @@ export function Footer() {
 
             <div className="flex flex-wrap gap-2 mt-5">
               <FooterBadge icon={<Brain className="w-3.5 h-3.5" />} label="Learning Core" />
+              <FooterBadge icon={<Dna className="w-3.5 h-3.5" />} label="Learning Genome" />
               <FooterBadge icon={<Sparkles className="w-3.5 h-3.5" />} label="IA Socrática" />
               <FooterBadge icon={<ShieldCheck className="w-3.5 h-3.5" />} label="Evidências" />
             </div>
 
             <div className="mt-6 flex flex-wrap gap-3">
-              <Link to="/testes" className="inline-flex items-center gap-2 rounded-xl bg-white text-slate-950 px-4 py-2.5 text-sm font-bold hover:bg-slate-100 transition-colors">
-                <Rocket className="w-4 h-4" /> Explorar Alpha
+              <Link to="/genoma" className="inline-flex items-center gap-2 rounded-xl bg-white text-slate-950 px-4 py-2.5 text-sm font-bold hover:bg-slate-100 transition-colors">
+                <Dna className="w-4 h-4" /> Ver Genome
               </Link>
-              <Link to="/acessibilidade" className="inline-flex items-center gap-2 rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-slate-900 transition-colors">
-                <Accessibility className="w-4 h-4" /> Inclusão digital
+              <Link to="/testes" className="inline-flex items-center gap-2 rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-slate-900 transition-colors">
+                <Rocket className="w-4 h-4" /> Explorar Alpha
               </Link>
             </div>
           </div>
@@ -88,12 +90,11 @@ export function Footer() {
           <p>© {new Date().getFullYear()} MindSteps. Inteligência pedagógica para aprendizagem real.</p>
           <div className="flex flex-wrap gap-4">
             <Link to="/empresa" className="hover:text-white transition-colors">Alternative Ventures</Link>
+            <Link to="/genoma" className="hover:text-white transition-colors">Learning Genome</Link>
             <Link to="/acessibilidade" className="hover:text-white transition-colors">Acessibilidade</Link>
             <Link to="/seguranca" className="hover:text-white transition-colors">Segurança</Link>
             <Link to="/roadmap" className="hover:text-white transition-colors">Roadmap</Link>
             <Link to="/feedback" className="hover:text-white transition-colors">Enviar feedback</Link>
-            <Link to="/protocolo" className="hover:text-white transition-colors">Roteiro de testes</Link>
-            <Link to="/pesquisa" className="hover:text-white transition-colors">Pesquisa educacional</Link>
           </div>
         </div>
       </div>
