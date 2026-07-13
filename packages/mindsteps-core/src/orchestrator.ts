@@ -25,6 +25,7 @@ import { generateLearningDNA, summarizeLearningDNA, type LearningDNAProfile } fr
 import { BASIC_LEARNING_GRAPH } from './learningGraph';
 import { predictLearningRisks, summarizeLearningPredictions, type LearningPrediction } from './predictionEngine';
 import { buildEvidenceBundle, explainEvidence, type EvidenceBundle } from './evidenceEngine';
+import { decideNextLearningMove, summarizeLearningDecision, type LearningDecision } from './learningDecisionEngine';
 
 export interface OrchestratorInput {
   learnerId: string;
@@ -49,6 +50,7 @@ export interface OrchestratorOutput {
   learningDNA: LearningDNAProfile;
   predictions: LearningPrediction[];
   evidence: EvidenceBundle;
+  decision: LearningDecision;
   reflection: ReflectionPrompt;
   recommendations: LearningRecommendation[];
   nextJourneyStep: JourneyStep;
@@ -81,6 +83,7 @@ export function buildAiContext(params: {
   learningDNA: LearningDNAProfile;
   predictions: LearningPrediction[];
   evidence: EvidenceBundle;
+  decision: LearningDecision;
   reflection: ReflectionPrompt;
   recommendations: LearningRecommendation[];
   nextJourneyStep: JourneyStep;
@@ -100,6 +103,7 @@ export function buildAiContext(params: {
     learningDNA,
     predictions,
     evidence,
+    decision,
     reflection,
     recommendations,
     nextJourneyStep,
@@ -122,11 +126,13 @@ export function buildAiContext(params: {
   const dnaSummary = summarizeLearningDNA(learningDNA);
   const predictionSummary = summarizeLearningPredictions(predictions);
   const evidenceSummary = explainEvidence(evidence, 4);
+  const decisionSummary = summarizeLearningDecision(decision);
 
   return [
     'You are MindSteps, a learning companion powered by a pedagogical engine.',
     'Never give a direct answer when the learner can be guided to think.',
-    'Use the selected pedagogical strategy and learning insights below.',
+    'Follow the Learning Decision before any lower-priority suggestion.',
+    'Use only one main pedagogical move per response.',
     'Treat hypotheses as provisional and do not label the learner permanently.',
     '',
     `Learner: ${context.learnerName || context.learnerId}`,
@@ -135,6 +141,14 @@ export function buildAiContext(params: {
     `Learning Memory: ${memorySummary || 'No relevant long-term memory yet.'}`,
     `Learning DNA: ${dnaSummary}`,
     learningDNA.summary,
+    '',
+    `LEARNING DECISION: ${decisionSummary}`,
+    `Decision objective: ${decision.objective}`,
+    `Required teaching move: ${decision.teachingMove}`,
+    `Required response shape: ${decision.responseShape.join(' -> ')}`,
+    `Success criteria: ${decision.successCriteria.join(' | ')}`,
+    `Avoid: ${decision.avoid.join(' | ')}`,
+    `Decision reason: ${decision.reason}`,
     '',
     `Selected Strategy: ${plan.strategy.type}`,
     `Goal: ${plan.strategy.goal}`,
@@ -243,6 +257,13 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     predictions,
     interventions,
   });
+  const decision = decideNextLearningMove({
+    learningState,
+    flow,
+    misconceptions,
+    predictions,
+    evidence,
+  });
   const aiContext = buildAiContext({
     context: { ...context, cognitiveTwin: updatedTwin, learningMemory: updatedMemory },
     plan,
@@ -253,6 +274,7 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     learningDNA,
     predictions,
     evidence,
+    decision,
     reflection,
     recommendations,
     nextJourneyStep,
@@ -276,6 +298,7 @@ export function runLearningOrchestrator(input: OrchestratorInput): OrchestratorO
     learningDNA,
     predictions,
     evidence,
+    decision,
     reflection,
     recommendations,
     nextJourneyStep,
