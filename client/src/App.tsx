@@ -4,7 +4,7 @@ import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { HomePage } from '@/pages/Home'
 import { AuthPage } from '@/pages/Auth'
-import { OnboardingPage } from '@/pages/Onboarding'
+import { RoleAwareOnboardingPage } from '@/pages/RoleAwareOnboarding'
 import { ChatPage } from '@/pages/Chat'
 import { ProfilePage } from '@/pages/Profile'
 import { LearningDashboardPage } from '@/pages/LearningDashboard'
@@ -65,7 +65,7 @@ function App() {
         <Route path="/pesquisa" element={<><Header /><ResearchDashboardPage /><Footer /></>} />
         <Route path="/piloto" element={<><Header /><PilotCenterPage /><Footer /></>} />
         <Route path="/auth" element={<AuthPage />} />
-        <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
+        <Route path="/onboarding" element={<ProtectedRoute><RoleAwareOnboardingPage /></ProtectedRoute>} />
         <Route path="/chat" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><div className="flex-1"><ChatPage /></div></div></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><LearningDashboardPage /><Footer /></div></ProtectedRoute>} />
         <Route path="/journey" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><LearningJourneyPage /><Footer /></div></ProtectedRoute>} />
