@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
-import { Accessibility, Beaker, BookOpen, Brain, Building2, Dna, GitBranch, GraduationCap, HeartHandshake, Network, Rocket, ShieldCheck, Sparkles } from 'lucide-react'
+import { Accessibility, Beaker, BookOpen, Brain, Building2, Compass, Dna, GitBranch, GraduationCap, HeartHandshake, Network, Rocket, ShieldCheck, Sparkles } from 'lucide-react'
 
 const PRODUCT_LINKS = [
+  { label: 'Tour guiado', route: '/tour' },
   { label: 'Tutor Socrático', route: '/chat' },
   { label: 'Painel do Aluno', route: '/dashboard' },
   { label: 'Learning Genome', route: '/genoma' },
@@ -58,8 +59,8 @@ export function Footer() {
             </div>
 
             <div className="mt-6 flex flex-wrap gap-3">
-              <Link to="/grafo" className="inline-flex items-center gap-2 rounded-xl bg-white text-slate-950 px-4 py-2.5 text-sm font-bold hover:bg-slate-100 transition-colors">
-                <GitBranch className="w-4 h-4" /> Ver grafo
+              <Link to="/tour" className="inline-flex items-center gap-2 rounded-xl bg-white text-slate-950 px-4 py-2.5 text-sm font-bold hover:bg-slate-100 transition-colors">
+                <Compass className="w-4 h-4" /> Fazer tour
               </Link>
               <Link to="/testes" className="inline-flex items-center gap-2 rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-slate-900 transition-colors">
                 <Rocket className="w-4 h-4" /> Explorar Alpha
@@ -92,12 +93,11 @@ export function Footer() {
           <p>© {new Date().getFullYear()} MindSteps. Inteligência pedagógica para aprendizagem real.</p>
           <div className="flex flex-wrap gap-4">
             <Link to="/empresa" className="hover:text-white transition-colors">Alternative Ventures</Link>
+            <Link to="/tour" className="hover:text-white transition-colors">Tour guiado</Link>
             <Link to="/grafo" className="hover:text-white transition-colors">Knowledge Graph</Link>
             <Link to="/genoma" className="hover:text-white transition-colors">Learning Genome</Link>
-            <Link to="/acessibilidade" className="hover:text-white transition-colors">Acessibilidade</Link>
             <Link to="/seguranca" className="hover:text-white transition-colors">Segurança</Link>
             <Link to="/roadmap" className="hover:text-white transition-colors">Roadmap</Link>
-            <Link to="/feedback" className="hover:text-white transition-colors">Enviar feedback</Link>
           </div>
         </div>
       </div>
