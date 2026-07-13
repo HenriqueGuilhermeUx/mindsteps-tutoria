@@ -24,3 +24,4 @@ export * from './learningDNA';
 export * from './masteryEngine';
 export * from './predictionEngine';
 export * from './evidenceEngine';
+export * from './learningDecisionEngine';
