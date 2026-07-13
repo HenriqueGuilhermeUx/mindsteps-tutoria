@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores'
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
+import { InstitutionalContextBar } from '@/components/InstitutionalContextBar'
 import { HomePage } from '@/pages/Home'
 import { AuthPage } from '@/pages/Auth'
 import { RoleAwareOnboardingPage } from '@/pages/RoleAwareOnboarding'
@@ -42,6 +43,17 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+function InstitutionalLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col min-h-screen">
+      <Header />
+      <InstitutionalContextBar />
+      {children}
+      <Footer />
+    </div>
+  )
+}
+
 function App() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -60,8 +72,8 @@ function App() {
         <Route path="/inteligencia" element={<><Header /><IntelligenceLabPage /><Footer /></>} />
         <Route path="/simulador" element={<><Header /><ScenarioSimulatorPage /><Footer /></>} />
         <Route path="/feedback" element={<><Header /><FeedbackLabPage /><Footer /></>} />
-        <Route path="/escola" element={<><Header /><SchoolDashboardPage /><Footer /></>} />
-        <Route path="/rede" element={<><Header /><NetworkDashboardPage /><Footer /></>} />
+        <Route path="/escola" element={<InstitutionalLayout><SchoolDashboardPage /></InstitutionalLayout>} />
+        <Route path="/rede" element={<InstitutionalLayout><NetworkDashboardPage /></InstitutionalLayout>} />
         <Route path="/pesquisa" element={<><Header /><ResearchDashboardPage /><Footer /></>} />
         <Route path="/piloto" element={<><Header /><PilotCenterPage /><Footer /></>} />
         <Route path="/auth" element={<AuthPage />} />
@@ -72,8 +84,8 @@ function App() {
         <Route path="/missoes" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><MissionCenterPage /><Footer /></div></ProtectedRoute>} />
         <Route path="/dominio" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><MasteryCenterPage /><Footer /></div></ProtectedRoute>} />
         <Route path="/passport" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><LearningPassportPage /><Footer /></div></ProtectedRoute>} />
-        <Route path="/professor" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><TeacherDashboardPage /><Footer /></div></ProtectedRoute>} />
-        <Route path="/familia" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><FamilyDashboardPage /><Footer /></div></ProtectedRoute>} />
+        <Route path="/professor" element={<ProtectedRoute><InstitutionalLayout><TeacherDashboardPage /></InstitutionalLayout></ProtectedRoute>} />
+        <Route path="/familia" element={<ProtectedRoute><InstitutionalLayout><FamilyDashboardPage /></InstitutionalLayout></ProtectedRoute>} />
         <Route path="/perfil" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><ProfilePage /><Footer /></div></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
