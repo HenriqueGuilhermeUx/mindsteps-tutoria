@@ -29,6 +29,7 @@ import { SafetyPage } from '@/pages/Safety'
 import { AccessibilityPage } from '@/pages/Accessibility'
 import { LearningGenomePage } from '@/pages/LearningGenome'
 import { KnowledgeGraphPage } from '@/pages/KnowledgeGraph'
+import { ProductTourPage } from '@/pages/ProductTour'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore()
@@ -45,6 +46,7 @@ function App() {
     <div className="min-h-screen flex flex-col bg-slate-50">
       <Routes>
         <Route path="/" element={<><Header /><HomePage /><Footer /></>} />
+        <Route path="/tour" element={<><Header /><ProductTourPage /><Footer /></>} />
         <Route path="/empresa" element={<><Header /><CompanyPage /><Footer /></>} />
         <Route path="/roadmap" element={<><Header /><RoadmapPage /><Footer /></>} />
         <Route path="/seguranca" element={<><Header /><SafetyPage /><Footer /></>} />
