@@ -17,17 +17,25 @@ import {
   type LearnerCycleProgress,
   type LearningEquityPlan,
 } from './learningEquityEngine';
+import {
+  createConstitutionalContract,
+  summarizeConstitutionalContract,
+  type ConstitutionalContract,
+  type MindStepsPrincipleId,
+} from './mindstepsConstitution';
 
 export interface PedagogicalBrainInput extends OrchestratorInput {
   previousDecision?: LearningDecision;
   commonCycleOutcome?: CommonCycleOutcome;
   culturalContext?: CulturalLearningContext;
   cycleProgress?: LearnerCycleProgress;
+  activePrinciples?: MindStepsPrincipleId[];
 }
 
 export interface PedagogicalBrainOutput extends OrchestratorOutput {
   sessionMemory: SessionMemoryInsight;
   equityPlan?: LearningEquityPlan;
+  constitution: ConstitutionalContract;
   brainContext: string;
   responseContract: {
     primaryMove: LearningDecision['type'];
@@ -37,6 +45,8 @@ export interface PedagogicalBrainOutput extends OrchestratorOutput {
     mustReferencePreviousAttempt: boolean;
     mustConnectToCommonOutcome: boolean;
     mustPromoteCriticalThinking: boolean;
+    mustPreserveLearnerDignity: boolean;
+    mustRemainExplainable: boolean;
     prohibitedBehaviors: string[];
   };
 }
@@ -45,8 +55,9 @@ function createResponseContract(params: {
   decision: LearningDecision;
   sessionMemory: SessionMemoryInsight;
   equityPlan?: LearningEquityPlan;
+  constitution: ConstitutionalContract;
 }): PedagogicalBrainOutput['responseContract'] {
-  const { decision, sessionMemory, equityPlan } = params;
+  const { decision, sessionMemory, equityPlan, constitution } = params;
   const maxQuestions = sessionMemory.shouldAvoidAnotherQuestion ? 0 : 1;
   const maxParagraphs = sessionMemory.shouldReduceLength ? 2 : decision.type === 'challenge' ? 4 : 3;
 
@@ -58,9 +69,12 @@ function createResponseContract(params: {
     mustReferencePreviousAttempt: sessionMemory.hintCount > 0 || sessionMemory.unresolvedAttempts > 1,
     mustConnectToCommonOutcome: Boolean(equityPlan),
     mustPromoteCriticalThinking: true,
+    mustPreserveLearnerDignity: true,
+    mustRemainExplainable: true,
     prohibitedBehaviors: Array.from(
       new Set([
         ...decision.avoid,
+        ...constitution.prohibitedBehaviors,
         ...(sessionMemory.shouldChangeApproach ? ['Repeat the previous explanation or analogy'] : []),
         ...(sessionMemory.shouldAvoidAnotherQuestion ? ['Ask another open question before giving concrete support'] : []),
         ...(equityPlan ? ['Lower the common knowledge expectation because of origin, locality or pace'] : []),
@@ -86,14 +100,24 @@ export function runPedagogicalBrain(input: PedagogicalBrainInput): PedagogicalBr
         decision: orchestration.decision,
       })
     : undefined;
+  const constitution = createConstitutionalContract(input.activePrinciples);
   const responseContract = createResponseContract({
     decision: orchestration.decision,
     sessionMemory,
     equityPlan,
+    constitution,
   });
 
   const brainContext = [
     orchestration.aiContext,
+    '',
+    'MINDSTEPS CONSTITUTION — NON-NEGOTIABLE NORTH STAR',
+    summarizeConstitutionalContract(constitution),
+    `North star: ${constitution.northStar}`,
+    `Active principles: ${constitution.activePrinciples.map((principle) => `${principle.id}: ${principle.commitment}`).join(' | ')}`,
+    `Mandatory behaviors: ${constitution.mandatoryInstructions.join(' | ')}`,
+    'These principles outrank convenience, engagement metrics, speed, gamification and stylistic preferences.',
+    'When principles conflict, protect learner dignity and safety first, then preserve the right to knowledge, independent thought and human agency.',
     '',
     'PEDAGOGICAL BRAIN — CLOSED LOOP RULES',
     `Session Memory: ${summarizeSessionMemory(sessionMemory)}`,
@@ -127,6 +151,7 @@ export function runPedagogicalBrain(input: PedagogicalBrainInput): PedagogicalBr
     ...orchestration,
     sessionMemory,
     equityPlan,
+    constitution,
     brainContext,
     responseContract,
   };
@@ -139,6 +164,7 @@ export function summarizePedagogicalBrain(output: PedagogicalBrainOutput): strin
     `Change approach: ${output.responseContract.mustChangeApproach ? 'yes' : 'no'}`,
     `Question limit: ${output.responseContract.maxQuestions}`,
     `Paragraph limit: ${output.responseContract.maxParagraphs}`,
+    `Constitutional principles: ${output.constitution.activePrinciples.length}`,
     output.equityPlan ? `Common outcome convergence: ${output.equityPlan.convergenceStatus}` : '',
     output.equityPlan ? `Critical-thinking coverage: ${output.equityPlan.criticalThinkingCoverage}%` : '',
   ].filter(Boolean).join(' | ');
