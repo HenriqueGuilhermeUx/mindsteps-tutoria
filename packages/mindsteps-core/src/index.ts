@@ -26,4 +26,5 @@ export * from './predictionEngine';
 export * from './evidenceEngine';
 export * from './learningDecisionEngine';
 export * from './sessionMemoryEngine';
+export * from './learningEquityEngine';
 export * from './pedagogicalBrain';
