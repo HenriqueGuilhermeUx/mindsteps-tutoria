@@ -23,6 +23,11 @@ import {
   type ConstitutionalContract,
   type MindStepsPrincipleId,
 } from './mindstepsConstitution';
+import {
+  analyzeIntellectualGrowth,
+  summarizeIntellectualGrowth,
+  type IntellectualGrowthProfile,
+} from './intellectualGrowthEngine';
 
 export interface PedagogicalBrainInput extends OrchestratorInput {
   previousDecision?: LearningDecision;
@@ -36,6 +41,7 @@ export interface PedagogicalBrainOutput extends OrchestratorOutput {
   sessionMemory: SessionMemoryInsight;
   equityPlan?: LearningEquityPlan;
   constitution: ConstitutionalContract;
+  intellectualGrowth: IntellectualGrowthProfile;
   brainContext: string;
   responseContract: {
     primaryMove: LearningDecision['type'];
@@ -47,6 +53,7 @@ export interface PedagogicalBrainOutput extends OrchestratorOutput {
     mustPromoteCriticalThinking: boolean;
     mustPreserveLearnerDignity: boolean;
     mustRemainExplainable: boolean;
+    mustCreateGrowthOpportunity: boolean;
     prohibitedBehaviors: string[];
   };
 }
@@ -56,6 +63,7 @@ function createResponseContract(params: {
   sessionMemory: SessionMemoryInsight;
   equityPlan?: LearningEquityPlan;
   constitution: ConstitutionalContract;
+  intellectualGrowth: IntellectualGrowthProfile;
 }): PedagogicalBrainOutput['responseContract'] {
   const { decision, sessionMemory, equityPlan, constitution } = params;
   const maxQuestions = sessionMemory.shouldAvoidAnotherQuestion ? 0 : 1;
@@ -71,6 +79,7 @@ function createResponseContract(params: {
     mustPromoteCriticalThinking: true,
     mustPreserveLearnerDignity: true,
     mustRemainExplainable: true,
+    mustCreateGrowthOpportunity: true,
     prohibitedBehaviors: Array.from(
       new Set([
         ...decision.avoid,
@@ -80,6 +89,8 @@ function createResponseContract(params: {
         ...(equityPlan ? ['Lower the common knowledge expectation because of origin, locality or pace'] : []),
         'Demand a single learning path, speed, example or expression from every learner',
         'Reward passive repetition without understanding, justification or independent thought',
+        'Describe a temporary learning behavior as a fixed personality trait',
+        'Present intellectual-growth indicators as psychological diagnosis',
       ])
     ),
   };
@@ -101,12 +112,26 @@ export function runPedagogicalBrain(input: PedagogicalBrainInput): PedagogicalBr
       })
     : undefined;
   const constitution = createConstitutionalContract(input.activePrinciples);
+  const intellectualGrowth = analyzeIntellectualGrowth({
+    learnerId: input.learnerId,
+    subject: input.subject,
+    message: input.message,
+    events: orchestration.events,
+    signals: orchestration.signals,
+    learningState: orchestration.learningState,
+    evidence: orchestration.evidence,
+  });
   const responseContract = createResponseContract({
     decision: orchestration.decision,
     sessionMemory,
     equityPlan,
     constitution,
+    intellectualGrowth,
   });
+
+  const priorityIndicator = intellectualGrowth.indicators.find(
+    (indicator) => indicator.dimension === intellectualGrowth.nextDevelopmentPriority
+  );
 
   const brainContext = [
     orchestration.aiContext,
@@ -130,6 +155,13 @@ export function runPedagogicalBrain(input: PedagogicalBrainInput): PedagogicalBr
       ? 'Explicitly connect the next support to something the learner already tried.'
       : '',
     '',
+    'INTELLECTUAL GROWTH — OBSERVABLE DEVELOPMENT, NEVER LABELS',
+    summarizeIntellectualGrowth(intellectualGrowth),
+    `Next growth opportunity: ${priorityIndicator?.nextOpportunity || 'Create a short opportunity for independent reasoning.'}`,
+    `Safeguards: ${intellectualGrowth.safeguards.join(' | ')}`,
+    'Measure only observable learning behavior. Never infer worth, intelligence, personality or future potential from one interaction.',
+    'Whenever pedagogically appropriate, create one small opportunity for the learner to question, justify, reflect, transfer, revise or choose a strategy.',
+    '',
     'EQUITY AND COMMON KNOWLEDGE PRINCIPLE',
     'Personalize the path, pace, support, language and examples. Do not personalize away the learner’s right to essential knowledge.',
     'Use local culture and lived experience as a bridge to understanding, never as a ceiling or permanent label.',
@@ -152,6 +184,7 @@ export function runPedagogicalBrain(input: PedagogicalBrainInput): PedagogicalBr
     sessionMemory,
     equityPlan,
     constitution,
+    intellectualGrowth,
     brainContext,
     responseContract,
   };
@@ -165,6 +198,7 @@ export function summarizePedagogicalBrain(output: PedagogicalBrainOutput): strin
     `Question limit: ${output.responseContract.maxQuestions}`,
     `Paragraph limit: ${output.responseContract.maxParagraphs}`,
     `Constitutional principles: ${output.constitution.activePrinciples.length}`,
+    `Intellectual-growth priority: ${output.intellectualGrowth.nextDevelopmentPriority}`,
     output.equityPlan ? `Common outcome convergence: ${output.equityPlan.convergenceStatus}` : '',
     output.equityPlan ? `Critical-thinking coverage: ${output.equityPlan.criticalThinkingCoverage}%` : '',
   ].filter(Boolean).join(' | ');
