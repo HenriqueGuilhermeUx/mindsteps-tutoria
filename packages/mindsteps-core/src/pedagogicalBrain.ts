@@ -28,6 +28,11 @@ import {
   summarizeIntellectualGrowth,
   type IntellectualGrowthProfile,
 } from './intellectualGrowthEngine';
+import {
+  createMetacognitionPlan,
+  summarizeMetacognitionPlan,
+  type MetacognitionPlan,
+} from './metacognitionEngine';
 
 export interface PedagogicalBrainInput extends OrchestratorInput {
   previousDecision?: LearningDecision;
@@ -42,6 +47,7 @@ export interface PedagogicalBrainOutput extends OrchestratorOutput {
   equityPlan?: LearningEquityPlan;
   constitution: ConstitutionalContract;
   intellectualGrowth: IntellectualGrowthProfile;
+  metacognition: MetacognitionPlan;
   brainContext: string;
   responseContract: {
     primaryMove: LearningDecision['type'];
@@ -54,6 +60,7 @@ export interface PedagogicalBrainOutput extends OrchestratorOutput {
     mustPreserveLearnerDignity: boolean;
     mustRemainExplainable: boolean;
     mustCreateGrowthOpportunity: boolean;
+    mustCreateMetacognitiveOpportunity: boolean;
     prohibitedBehaviors: string[];
   };
 }
@@ -64,8 +71,9 @@ function createResponseContract(params: {
   equityPlan?: LearningEquityPlan;
   constitution: ConstitutionalContract;
   intellectualGrowth: IntellectualGrowthProfile;
+  metacognition: MetacognitionPlan;
 }): PedagogicalBrainOutput['responseContract'] {
-  const { decision, sessionMemory, equityPlan, constitution } = params;
+  const { decision, sessionMemory, equityPlan, constitution, metacognition } = params;
   const maxQuestions = sessionMemory.shouldAvoidAnotherQuestion ? 0 : 1;
   const maxParagraphs = sessionMemory.shouldReduceLength ? 2 : decision.type === 'challenge' ? 4 : 3;
 
@@ -80,10 +88,12 @@ function createResponseContract(params: {
     mustPreserveLearnerDignity: true,
     mustRemainExplainable: true,
     mustCreateGrowthOpportunity: true,
+    mustCreateMetacognitiveOpportunity: metacognition.shouldPromptNow,
     prohibitedBehaviors: Array.from(
       new Set([
         ...decision.avoid,
         ...constitution.prohibitedBehaviors,
+        ...metacognition.safeguards,
         ...(sessionMemory.shouldChangeApproach ? ['Repeat the previous explanation or analogy'] : []),
         ...(sessionMemory.shouldAvoidAnotherQuestion ? ['Ask another open question before giving concrete support'] : []),
         ...(equityPlan ? ['Lower the common knowledge expectation because of origin, locality or pace'] : []),
@@ -91,6 +101,7 @@ function createResponseContract(params: {
         'Reward passive repetition without understanding, justification or independent thought',
         'Describe a temporary learning behavior as a fixed personality trait',
         'Present intellectual-growth indicators as psychological diagnosis',
+        'Turn reflection into an additional test or interrogation',
       ])
     ),
   };
@@ -121,12 +132,21 @@ export function runPedagogicalBrain(input: PedagogicalBrainInput): PedagogicalBr
     learningState: orchestration.learningState,
     evidence: orchestration.evidence,
   });
+  const metacognition = createMetacognitionPlan({
+    learnerId: input.learnerId,
+    subject: input.subject,
+    message: input.message,
+    events: orchestration.events,
+    decision: orchestration.decision,
+    intellectualGrowth,
+  });
   const responseContract = createResponseContract({
     decision: orchestration.decision,
     sessionMemory,
     equityPlan,
     constitution,
     intellectualGrowth,
+    metacognition,
   });
 
   const priorityIndicator = intellectualGrowth.indicators.find(
@@ -162,6 +182,16 @@ export function runPedagogicalBrain(input: PedagogicalBrainInput): PedagogicalBr
     'Measure only observable learning behavior. Never infer worth, intelligence, personality or future potential from one interaction.',
     'Whenever pedagogically appropriate, create one small opportunity for the learner to question, justify, reflect, transfer, revise or choose a strategy.',
     '',
+    'METACOGNITION CYCLE — PLAN, MONITOR, EVALUATE, TRANSFER',
+    summarizeMetacognitionPlan(metacognition),
+    metacognition.shouldPromptNow
+      ? `Use this single metacognitive opportunity only if it fits naturally after the primary teaching move: ${metacognition.prompt.question}`
+      : 'Do not add an explicit reflection question now. First create safety, clarity or a small successful step.',
+    `Metacognitive purpose: ${metacognition.prompt.purpose}`,
+    `Expected evidence: ${metacognition.prompt.responseExpectation}`,
+    `Metacognitive safeguards: ${metacognition.safeguards.join(' | ')}`,
+    'The learner may demonstrate awareness through plain language, examples, choices, drawings or speech. Do not privilege sophisticated vocabulary.',
+    '',
     'EQUITY AND COMMON KNOWLEDGE PRINCIPLE',
     'Personalize the path, pace, support, language and examples. Do not personalize away the learner’s right to essential knowledge.',
     'Use local culture and lived experience as a bridge to understanding, never as a ceiling or permanent label.',
@@ -185,6 +215,7 @@ export function runPedagogicalBrain(input: PedagogicalBrainInput): PedagogicalBr
     equityPlan,
     constitution,
     intellectualGrowth,
+    metacognition,
     brainContext,
     responseContract,
   };
@@ -199,6 +230,7 @@ export function summarizePedagogicalBrain(output: PedagogicalBrainOutput): strin
     `Paragraph limit: ${output.responseContract.maxParagraphs}`,
     `Constitutional principles: ${output.constitution.activePrinciples.length}`,
     `Intellectual-growth priority: ${output.intellectualGrowth.nextDevelopmentPriority}`,
+    `Metacognition phase: ${output.metacognition.currentPhase}`,
     output.equityPlan ? `Common outcome convergence: ${output.equityPlan.convergenceStatus}` : '',
     output.equityPlan ? `Critical-thinking coverage: ${output.equityPlan.criticalThinkingCoverage}%` : '',
   ].filter(Boolean).join(' | ');
