@@ -29,4 +29,5 @@ export * from './sessionMemoryEngine';
 export * from './learningEquityEngine';
 export * from './mindstepsConstitution';
 export * from './intellectualGrowthEngine';
+export * from './metacognitionEngine';
 export * from './pedagogicalBrain';
