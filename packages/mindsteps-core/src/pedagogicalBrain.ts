@@ -33,6 +33,12 @@ import {
   summarizeMetacognitionPlan,
   type MetacognitionPlan,
 } from './metacognitionEngine';
+import type { TeachingStrategyMemory } from './teachingStrategyMemory';
+import {
+  evaluateTeachingStrategy,
+  summarizeTeachingStrategyEvaluation,
+  type TeachingStrategyEvaluation,
+} from './teachingStrategyEvaluator';
 
 export interface PedagogicalBrainInput extends OrchestratorInput {
   previousDecision?: LearningDecision;
@@ -40,6 +46,7 @@ export interface PedagogicalBrainInput extends OrchestratorInput {
   culturalContext?: CulturalLearningContext;
   cycleProgress?: LearnerCycleProgress;
   activePrinciples?: MindStepsPrincipleId[];
+  teachingStrategyMemory?: TeachingStrategyMemory;
 }
 
 export interface PedagogicalBrainOutput extends OrchestratorOutput {
@@ -48,6 +55,7 @@ export interface PedagogicalBrainOutput extends OrchestratorOutput {
   constitution: ConstitutionalContract;
   intellectualGrowth: IntellectualGrowthProfile;
   metacognition: MetacognitionPlan;
+  strategyEvaluation: TeachingStrategyEvaluation;
   brainContext: string;
   responseContract: {
     primaryMove: LearningDecision['type'];
@@ -61,6 +69,7 @@ export interface PedagogicalBrainOutput extends OrchestratorOutput {
     mustRemainExplainable: boolean;
     mustCreateGrowthOpportunity: boolean;
     mustCreateMetacognitiveOpportunity: boolean;
+    mustObeyStrategyEvaluation: boolean;
     prohibitedBehaviors: string[];
   };
 }
@@ -72,16 +81,18 @@ function createResponseContract(params: {
   constitution: ConstitutionalContract;
   intellectualGrowth: IntellectualGrowthProfile;
   metacognition: MetacognitionPlan;
+  strategyEvaluation: TeachingStrategyEvaluation;
 }): PedagogicalBrainOutput['responseContract'] {
-  const { decision, sessionMemory, equityPlan, constitution, metacognition } = params;
+  const { decision, sessionMemory, equityPlan, constitution, metacognition, strategyEvaluation } = params;
   const maxQuestions = sessionMemory.shouldAvoidAnotherQuestion ? 0 : 1;
   const maxParagraphs = sessionMemory.shouldReduceLength ? 2 : decision.type === 'challenge' ? 4 : 3;
+  const mustChangeApproach = sessionMemory.shouldChangeApproach || strategyEvaluation.shouldChangeRepresentation;
 
   return {
     primaryMove: decision.type,
     maxQuestions,
     maxParagraphs,
-    mustChangeApproach: sessionMemory.shouldChangeApproach,
+    mustChangeApproach,
     mustReferencePreviousAttempt: sessionMemory.hintCount > 0 || sessionMemory.unresolvedAttempts > 1,
     mustConnectToCommonOutcome: Boolean(equityPlan),
     mustPromoteCriticalThinking: true,
@@ -89,12 +100,14 @@ function createResponseContract(params: {
     mustRemainExplainable: true,
     mustCreateGrowthOpportunity: true,
     mustCreateMetacognitiveOpportunity: metacognition.shouldPromptNow,
+    mustObeyStrategyEvaluation: true,
     prohibitedBehaviors: Array.from(
       new Set([
         ...decision.avoid,
         ...constitution.prohibitedBehaviors,
         ...metacognition.safeguards,
-        ...(sessionMemory.shouldChangeApproach ? ['Repeat the previous explanation or analogy'] : []),
+        ...strategyEvaluation.safeguards,
+        ...(mustChangeApproach ? ['Repeat the previous explanation, analogy or representation'] : []),
         ...(sessionMemory.shouldAvoidAnotherQuestion ? ['Ask another open question before giving concrete support'] : []),
         ...(equityPlan ? ['Lower the common knowledge expectation because of origin, locality or pace'] : []),
         'Demand a single learning path, speed, example or expression from every learner',
@@ -102,6 +115,7 @@ function createResponseContract(params: {
         'Describe a temporary learning behavior as a fixed personality trait',
         'Present intellectual-growth indicators as psychological diagnosis',
         'Turn reflection into an additional test or interrogation',
+        'Continue a teaching strategy merely because the tutor prefers it',
       ])
     ),
   };
@@ -140,6 +154,16 @@ export function runPedagogicalBrain(input: PedagogicalBrainInput): PedagogicalBr
     decision: orchestration.decision,
     intellectualGrowth,
   });
+  const strategyEvaluation = evaluateTeachingStrategy({
+    subject: input.subject,
+    concept: orchestration.events.find((event) => event.concept)?.concept,
+    strategy: orchestration.plan.strategy.type,
+    events: orchestration.events,
+    learningState: orchestration.learningState,
+    flow: orchestration.flow,
+    sessionMemory,
+    memory: input.teachingStrategyMemory,
+  });
   const responseContract = createResponseContract({
     decision: orchestration.decision,
     sessionMemory,
@@ -147,6 +171,7 @@ export function runPedagogicalBrain(input: PedagogicalBrainInput): PedagogicalBr
     constitution,
     intellectualGrowth,
     metacognition,
+    strategyEvaluation,
   });
 
   const priorityIndicator = intellectualGrowth.indicators.find(
@@ -174,6 +199,18 @@ export function runPedagogicalBrain(input: PedagogicalBrainInput): PedagogicalBr
     responseContract.mustReferencePreviousAttempt
       ? 'Explicitly connect the next support to something the learner already tried.'
       : '',
+    '',
+    'TEACHING STRATEGY EVALUATION — LEARN HOW TO TEACH THIS LEARNER',
+    summarizeTeachingStrategyEvaluation(strategyEvaluation),
+    `Strategy evidence: ${strategyEvaluation.evidence.join(' | ')}`,
+    `Required adjustment: ${strategyEvaluation.nextStrategyGuidance}`,
+    strategyEvaluation.shouldIncreaseSupport
+      ? 'Increase support without lowering the knowledge goal.'
+      : '',
+    strategyEvaluation.shouldReduceSupport
+      ? 'Fade unnecessary support and ask for transfer, justification or independent execution.'
+      : '',
+    'Do not convert a temporary success into a fixed learning-style label. Strategy preferences remain hypotheses that must be retested.',
     '',
     'INTELLECTUAL GROWTH — OBSERVABLE DEVELOPMENT, NEVER LABELS',
     summarizeIntellectualGrowth(intellectualGrowth),
@@ -216,6 +253,7 @@ export function runPedagogicalBrain(input: PedagogicalBrainInput): PedagogicalBr
     constitution,
     intellectualGrowth,
     metacognition,
+    strategyEvaluation,
     brainContext,
     responseContract,
   };
@@ -229,6 +267,8 @@ export function summarizePedagogicalBrain(output: PedagogicalBrainOutput): strin
     `Question limit: ${output.responseContract.maxQuestions}`,
     `Paragraph limit: ${output.responseContract.maxParagraphs}`,
     `Constitutional principles: ${output.constitution.activePrinciples.length}`,
+    `Strategy status: ${output.strategyEvaluation.status}`,
+    `Strategy effectiveness: ${output.strategyEvaluation.effectivenessScore}/10`,
     `Intellectual-growth priority: ${output.intellectualGrowth.nextDevelopmentPriority}`,
     `Metacognition phase: ${output.metacognition.currentPhase}`,
     output.equityPlan ? `Common outcome convergence: ${output.equityPlan.convergenceStatus}` : '',
