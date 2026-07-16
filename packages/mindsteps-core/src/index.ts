@@ -13,6 +13,7 @@ export * from './learningSession';
 export * from './learningState';
 export * from './misconceptionEngine';
 export * from './teachingStrategyMemory';
+export * from './teachingStrategyEvaluator';
 export * from './learningSignals';
 export * from './teacherCopilot';
 export * from './familyCompanion';
