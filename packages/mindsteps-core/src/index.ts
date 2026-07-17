@@ -31,4 +31,5 @@ export * from './learningEquityEngine';
 export * from './mindstepsConstitution';
 export * from './intellectualGrowthEngine';
 export * from './metacognitionEngine';
+export * from './transferEngine';
 export * from './pedagogicalBrain';
