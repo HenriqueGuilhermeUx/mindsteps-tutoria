@@ -39,6 +39,11 @@ import {
   summarizeTeachingStrategyEvaluation,
   type TeachingStrategyEvaluation,
 } from './teachingStrategyEvaluator';
+import {
+  assessKnowledgeTransfer,
+  summarizeKnowledgeTransfer,
+  type KnowledgeTransferAssessment,
+} from './transferEngine';
 
 export interface PedagogicalBrainInput extends OrchestratorInput {
   previousDecision?: LearningDecision;
@@ -56,6 +61,7 @@ export interface PedagogicalBrainOutput extends OrchestratorOutput {
   intellectualGrowth: IntellectualGrowthProfile;
   metacognition: MetacognitionPlan;
   strategyEvaluation: TeachingStrategyEvaluation;
+  transfer: KnowledgeTransferAssessment;
   brainContext: string;
   responseContract: {
     primaryMove: LearningDecision['type'];
@@ -70,6 +76,7 @@ export interface PedagogicalBrainOutput extends OrchestratorOutput {
     mustCreateGrowthOpportunity: boolean;
     mustCreateMetacognitiveOpportunity: boolean;
     mustObeyStrategyEvaluation: boolean;
+    mustCreateTransferOpportunity: boolean;
     prohibitedBehaviors: string[];
   };
 }
@@ -82,8 +89,9 @@ function createResponseContract(params: {
   intellectualGrowth: IntellectualGrowthProfile;
   metacognition: MetacognitionPlan;
   strategyEvaluation: TeachingStrategyEvaluation;
+  transfer: KnowledgeTransferAssessment;
 }): PedagogicalBrainOutput['responseContract'] {
-  const { decision, sessionMemory, equityPlan, constitution, metacognition, strategyEvaluation } = params;
+  const { decision, sessionMemory, equityPlan, constitution, metacognition, strategyEvaluation, transfer } = params;
   const maxQuestions = sessionMemory.shouldAvoidAnotherQuestion ? 0 : 1;
   const maxParagraphs = sessionMemory.shouldReduceLength ? 2 : decision.type === 'challenge' ? 4 : 3;
   const mustChangeApproach = sessionMemory.shouldChangeApproach || strategyEvaluation.shouldChangeRepresentation;
@@ -101,12 +109,14 @@ function createResponseContract(params: {
     mustCreateGrowthOpportunity: true,
     mustCreateMetacognitiveOpportunity: metacognition.shouldPromptNow,
     mustObeyStrategyEvaluation: true,
+    mustCreateTransferOpportunity: transfer.shouldChallengeNow,
     prohibitedBehaviors: Array.from(
       new Set([
         ...decision.avoid,
         ...constitution.prohibitedBehaviors,
         ...metacognition.safeguards,
         ...strategyEvaluation.safeguards,
+        ...transfer.safeguards,
         ...(mustChangeApproach ? ['Repeat the previous explanation, analogy or representation'] : []),
         ...(sessionMemory.shouldAvoidAnotherQuestion ? ['Ask another open question before giving concrete support'] : []),
         ...(equityPlan ? ['Lower the common knowledge expectation because of origin, locality or pace'] : []),
@@ -116,6 +126,7 @@ function createResponseContract(params: {
         'Present intellectual-growth indicators as psychological diagnosis',
         'Turn reflection into an additional test or interrogation',
         'Continue a teaching strategy merely because the tutor prefers it',
+        'Treat repeating the original example as evidence of transfer',
       ])
     ),
   };
@@ -164,6 +175,15 @@ export function runPedagogicalBrain(input: PedagogicalBrainInput): PedagogicalBr
     sessionMemory,
     memory: input.teachingStrategyMemory,
   });
+  const transfer = assessKnowledgeTransfer({
+    learnerId: input.learnerId,
+    subject: input.subject,
+    concept: orchestration.events.find((event) => event.concept)?.concept,
+    message: input.message,
+    events: orchestration.events,
+    decision: orchestration.decision,
+    intellectualGrowth,
+  });
   const responseContract = createResponseContract({
     decision: orchestration.decision,
     sessionMemory,
@@ -172,6 +192,7 @@ export function runPedagogicalBrain(input: PedagogicalBrainInput): PedagogicalBr
     intellectualGrowth,
     metacognition,
     strategyEvaluation,
+    transfer,
   });
 
   const priorityIndicator = intellectualGrowth.indicators.find(
@@ -211,6 +232,16 @@ export function runPedagogicalBrain(input: PedagogicalBrainInput): PedagogicalBr
       ? 'Fade unnecessary support and ask for transfer, justification or independent execution.'
       : '',
     'Do not convert a temporary success into a fixed learning-style label. Strategy preferences remain hypotheses that must be retested.',
+    '',
+    'KNOWLEDGE TRANSFER — VERIFY UNDERSTANDING BEYOND THE ORIGINAL EXAMPLE',
+    summarizeKnowledgeTransfer(transfer),
+    `Transfer evidence: ${transfer.evidence.map((item) => item.description).join(' | ') || 'No transfer evidence yet.'}`,
+    transfer.shouldChallengeNow
+      ? `Create one concise transfer opportunity after the primary move: ${transfer.challenge.prompt}`
+      : 'Do not force transfer now. First restore confidence or rebuild the prerequisite.',
+    `Transfer success criteria: ${transfer.challenge.successCriteria.join(' | ')}`,
+    `Transfer safeguards: ${transfer.safeguards.join(' | ')}`,
+    'Real transfer requires applying the underlying idea in a different context and explaining what remains structurally the same.',
     '',
     'INTELLECTUAL GROWTH — OBSERVABLE DEVELOPMENT, NEVER LABELS',
     summarizeIntellectualGrowth(intellectualGrowth),
@@ -254,6 +285,7 @@ export function runPedagogicalBrain(input: PedagogicalBrainInput): PedagogicalBr
     intellectualGrowth,
     metacognition,
     strategyEvaluation,
+    transfer,
     brainContext,
     responseContract,
   };
@@ -269,6 +301,8 @@ export function summarizePedagogicalBrain(output: PedagogicalBrainOutput): strin
     `Constitutional principles: ${output.constitution.activePrinciples.length}`,
     `Strategy status: ${output.strategyEvaluation.status}`,
     `Strategy effectiveness: ${output.strategyEvaluation.effectivenessScore}/10`,
+    `Transfer level: ${output.transfer.level}`,
+    `Transfer score: ${output.transfer.score}/10`,
     `Intellectual-growth priority: ${output.intellectualGrowth.nextDevelopmentPriority}`,
     `Metacognition phase: ${output.metacognition.currentPhase}`,
     output.equityPlan ? `Common outcome convergence: ${output.equityPlan.convergenceStatus}` : '',
