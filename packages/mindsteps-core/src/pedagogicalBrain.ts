@@ -44,6 +44,11 @@ import {
   summarizeKnowledgeTransfer,
   type KnowledgeTransferAssessment,
 } from './transferEngine';
+import {
+  createScientificThinkingPlan,
+  summarizeScientificThinking,
+  type ScientificThinkingPlan,
+} from './scientificThinkingEngine';
 
 export interface PedagogicalBrainInput extends OrchestratorInput {
   previousDecision?: LearningDecision;
@@ -62,6 +67,7 @@ export interface PedagogicalBrainOutput extends OrchestratorOutput {
   metacognition: MetacognitionPlan;
   strategyEvaluation: TeachingStrategyEvaluation;
   transfer: KnowledgeTransferAssessment;
+  scientificThinking: ScientificThinkingPlan;
   brainContext: string;
   responseContract: {
     primaryMove: LearningDecision['type'];
@@ -77,6 +83,7 @@ export interface PedagogicalBrainOutput extends OrchestratorOutput {
     mustCreateMetacognitiveOpportunity: boolean;
     mustObeyStrategyEvaluation: boolean;
     mustCreateTransferOpportunity: boolean;
+    mustCreateScientificThinkingOpportunity: boolean;
     prohibitedBehaviors: string[];
   };
 }
@@ -90,8 +97,18 @@ function createResponseContract(params: {
   metacognition: MetacognitionPlan;
   strategyEvaluation: TeachingStrategyEvaluation;
   transfer: KnowledgeTransferAssessment;
+  scientificThinking: ScientificThinkingPlan;
 }): PedagogicalBrainOutput['responseContract'] {
-  const { decision, sessionMemory, equityPlan, constitution, metacognition, strategyEvaluation, transfer } = params;
+  const {
+    decision,
+    sessionMemory,
+    equityPlan,
+    constitution,
+    metacognition,
+    strategyEvaluation,
+    transfer,
+    scientificThinking,
+  } = params;
   const maxQuestions = sessionMemory.shouldAvoidAnotherQuestion ? 0 : 1;
   const maxParagraphs = sessionMemory.shouldReduceLength ? 2 : decision.type === 'challenge' ? 4 : 3;
   const mustChangeApproach = sessionMemory.shouldChangeApproach || strategyEvaluation.shouldChangeRepresentation;
@@ -110,25 +127,26 @@ function createResponseContract(params: {
     mustCreateMetacognitiveOpportunity: metacognition.shouldPromptNow,
     mustObeyStrategyEvaluation: true,
     mustCreateTransferOpportunity: transfer.shouldChallengeNow,
-    prohibitedBehaviors: Array.from(
-      new Set([
-        ...decision.avoid,
-        ...constitution.prohibitedBehaviors,
-        ...metacognition.safeguards,
-        ...strategyEvaluation.safeguards,
-        ...transfer.safeguards,
-        ...(mustChangeApproach ? ['Repeat the previous explanation, analogy or representation'] : []),
-        ...(sessionMemory.shouldAvoidAnotherQuestion ? ['Ask another open question before giving concrete support'] : []),
-        ...(equityPlan ? ['Lower the common knowledge expectation because of origin, locality or pace'] : []),
-        'Demand a single learning path, speed, example or expression from every learner',
-        'Reward passive repetition without understanding, justification or independent thought',
-        'Describe a temporary learning behavior as a fixed personality trait',
-        'Present intellectual-growth indicators as psychological diagnosis',
-        'Turn reflection into an additional test or interrogation',
-        'Continue a teaching strategy merely because the tutor prefers it',
-        'Treat repeating the original example as evidence of transfer',
-      ])
-    ),
+    mustCreateScientificThinkingOpportunity: scientificThinking.shouldPromptNow,
+    prohibitedBehaviors: Array.from(new Set([
+      ...decision.avoid,
+      ...constitution.prohibitedBehaviors,
+      ...metacognition.safeguards,
+      ...strategyEvaluation.safeguards,
+      ...transfer.safeguards,
+      ...scientificThinking.safeguards,
+      ...(mustChangeApproach ? ['Repeat the previous explanation, analogy or representation'] : []),
+      ...(sessionMemory.shouldAvoidAnotherQuestion ? ['Ask another open question before giving concrete support'] : []),
+      ...(equityPlan ? ['Lower the common knowledge expectation because of origin, locality or pace'] : []),
+      'Demand a single learning path, speed, example or expression from every learner',
+      'Reward passive repetition without understanding, justification or independent thought',
+      'Describe a temporary learning behavior as a fixed personality trait',
+      'Present intellectual-growth indicators as psychological diagnosis',
+      'Turn reflection into an additional test or interrogation',
+      'Continue a teaching strategy merely because the tutor prefers it',
+      'Treat repeating the original example as evidence of transfer',
+      'Present an opinion as evidence merely because it sounds confident',
+    ])),
   };
 }
 
@@ -184,6 +202,14 @@ export function runPedagogicalBrain(input: PedagogicalBrainInput): PedagogicalBr
     decision: orchestration.decision,
     intellectualGrowth,
   });
+  const scientificThinking = createScientificThinkingPlan({
+    learnerId: input.learnerId,
+    subject: input.subject,
+    message: input.message,
+    events: orchestration.events,
+    learningState: orchestration.learningState,
+    decision: orchestration.decision,
+  });
   const responseContract = createResponseContract({
     decision: orchestration.decision,
     sessionMemory,
@@ -193,6 +219,7 @@ export function runPedagogicalBrain(input: PedagogicalBrainInput): PedagogicalBr
     metacognition,
     strategyEvaluation,
     transfer,
+    scientificThinking,
   });
 
   const priorityIndicator = intellectualGrowth.indicators.find(
@@ -215,7 +242,7 @@ export function runPedagogicalBrain(input: PedagogicalBrainInput): PedagogicalBr
     `Response contract: execute ${responseContract.primaryMove} as the only primary move.`,
     `Maximum questions: ${responseContract.maxQuestions}. Maximum short paragraphs: ${responseContract.maxParagraphs}.`,
     responseContract.mustChangeApproach
-      ? 'You MUST use a meaningfully different representation, example or teaching method from the recent assistant turns.'
+      ? 'You MUST use a meaningfully different representation, example or teaching method from recent turns.'
       : 'You may continue the current representation, but monitor the learner response.',
     responseContract.mustReferencePreviousAttempt
       ? 'Explicitly connect the next support to something the learner already tried.'
@@ -225,12 +252,8 @@ export function runPedagogicalBrain(input: PedagogicalBrainInput): PedagogicalBr
     summarizeTeachingStrategyEvaluation(strategyEvaluation),
     `Strategy evidence: ${strategyEvaluation.evidence.join(' | ')}`,
     `Required adjustment: ${strategyEvaluation.nextStrategyGuidance}`,
-    strategyEvaluation.shouldIncreaseSupport
-      ? 'Increase support without lowering the knowledge goal.'
-      : '',
-    strategyEvaluation.shouldReduceSupport
-      ? 'Fade unnecessary support and ask for transfer, justification or independent execution.'
-      : '',
+    strategyEvaluation.shouldIncreaseSupport ? 'Increase support without lowering the knowledge goal.' : '',
+    strategyEvaluation.shouldReduceSupport ? 'Fade unnecessary support and ask for transfer, justification or independent execution.' : '',
     'Do not convert a temporary success into a fixed learning-style label. Strategy preferences remain hypotheses that must be retested.',
     '',
     'KNOWLEDGE TRANSFER — VERIFY UNDERSTANDING BEYOND THE ORIGINAL EXAMPLE',
@@ -242,6 +265,16 @@ export function runPedagogicalBrain(input: PedagogicalBrainInput): PedagogicalBr
     `Transfer success criteria: ${transfer.challenge.successCriteria.join(' | ')}`,
     `Transfer safeguards: ${transfer.safeguards.join(' | ')}`,
     'Real transfer requires applying the underlying idea in a different context and explaining what remains structurally the same.',
+    '',
+    'SCIENTIFIC THINKING — OBSERVE, QUESTION, HYPOTHESIZE, TEST, COMPARE, REVISE, CONCLUDE',
+    summarizeScientificThinking(scientificThinking),
+    scientificThinking.shouldPromptNow
+      ? `Create one concise scientific-thinking opportunity when it fits naturally: ${scientificThinking.prompt.question}`
+      : 'Do not add an investigation prompt now. First reduce overload or restore confidence.',
+    `Scientific purpose: ${scientificThinking.prompt.purpose}`,
+    `Scientific success criteria: ${scientificThinking.prompt.successCriteria.join(' | ')}`,
+    `Scientific safeguards: ${scientificThinking.safeguards.join(' | ')}`,
+    'Keep observation, inference, hypothesis, evidence and conclusion distinct. Conclusions must remain proportional to evidence.',
     '',
     'INTELLECTUAL GROWTH — OBSERVABLE DEVELOPMENT, NEVER LABELS',
     summarizeIntellectualGrowth(intellectualGrowth),
@@ -268,14 +301,12 @@ export function runPedagogicalBrain(input: PedagogicalBrainInput): PedagogicalBr
     equityPlan ? `Contextualization guidance: ${equityPlan.contextualizationGuidance.join(' | ')}` : '',
     equityPlan ? `Equity safeguards: ${equityPlan.equitySafeguards.join(' | ')}` : '',
     equityPlan ? `Learner-facing direction: ${equityPlan.learnerMessage}` : '',
-    'Never confuse equal opportunity with identical instruction. Equal opportunity requires whatever responsible support is needed to reach meaningful common outcomes.',
+    'Never confuse equal opportunity with identical instruction. Equal opportunity requires responsible support to reach meaningful common outcomes.',
     'Always leave space for the learner to reason, disagree, test an idea and form an individual conclusion.',
     '',
     `Prohibited behaviors: ${responseContract.prohibitedBehaviors.join(' | ')}`,
     'After the learner replies, treat the result as new evidence and reconsider the strategy instead of defending the previous response.',
-  ]
-    .filter(Boolean)
-    .join('\n');
+  ].filter(Boolean).join('\n');
 
   return {
     ...orchestration,
@@ -286,6 +317,7 @@ export function runPedagogicalBrain(input: PedagogicalBrainInput): PedagogicalBr
     metacognition,
     strategyEvaluation,
     transfer,
+    scientificThinking,
     brainContext,
     responseContract,
   };
@@ -303,6 +335,7 @@ export function summarizePedagogicalBrain(output: PedagogicalBrainOutput): strin
     `Strategy effectiveness: ${output.strategyEvaluation.effectivenessScore}/10`,
     `Transfer level: ${output.transfer.level}`,
     `Transfer score: ${output.transfer.score}/10`,
+    `Scientific-thinking stage: ${output.scientificThinking.nextStage}`,
     `Intellectual-growth priority: ${output.intellectualGrowth.nextDevelopmentPriority}`,
     `Metacognition phase: ${output.metacognition.currentPhase}`,
     output.equityPlan ? `Common outcome convergence: ${output.equityPlan.convergenceStatus}` : '',
