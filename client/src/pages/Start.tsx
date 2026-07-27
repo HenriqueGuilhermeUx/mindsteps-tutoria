@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, BookOpen, Building2, GraduationCap, HeartHandshake, Landmark, School, Sparkles, Users } from 'lucide-react'
+import { ArrowRight, BookOpen, Building2, GraduationCap, HeartHandshake, Home, Landmark, School, Sparkles, Users } from 'lucide-react'
 
 const PROFILES = [
-  { id: 'aluno', label: 'Aluno', text: 'Aprender com o Tutor, acompanhar progresso, missões, domínio e conquistas.', icon: BookOpen, route: '/auth?mode=register&perfil=aluno' },
+  { id: 'independente', label: 'Estudar sozinho em casa', text: 'Criar uma conta pessoal, escolher objetivos e receber tutor, trilhas, revisões e plano semanal sem depender de escola.', icon: Home, route: '/estudar-em-casa' },
+  { id: 'aluno', label: 'Aluno vinculado à escola', text: 'Aprender com o Tutor, acompanhar progresso, missões, domínio e conquistas dentro da jornada escolar.', icon: BookOpen, route: '/auth?mode=register&perfil=aluno' },
   { id: 'familia', label: 'Pais e responsáveis', text: 'Acompanhar evolução, confiança, persistência e receber sugestões para apoiar em casa.', icon: HeartHandshake, route: '/auth?mode=register&perfil=familia' },
   { id: 'professor', label: 'Professor', text: 'Visualizar sinais da turma, intervenções recomendadas e próximos passos pedagógicos.', icon: GraduationCap, route: '/auth?mode=register&perfil=professor' },
   { id: 'coordenacao', label: 'Coordenação pedagógica', text: 'Comparar turmas, apoiar professores e organizar prioridades de acompanhamento.', icon: Users, route: '/auth?mode=register&perfil=coordenacao' },
@@ -18,7 +19,7 @@ export function StartPage() {
           <div className="max-w-4xl">
             <p className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/10 px-4 py-2 text-sm mb-5"><Sparkles className="w-4 h-4" /> Começar no MindSteps</p>
             <h1 className="text-4xl sm:text-6xl font-bold leading-tight">Escolha seu perfil e entre pela jornada certa.</h1>
-            <p className="text-lg sm:text-xl text-slate-300 mt-6 max-w-3xl leading-relaxed">O cadastro continua simples, com email e senha. A diferença é que agora o produto já entende qual experiência deve apresentar primeiro.</p>
+            <p className="text-lg sm:text-xl text-slate-300 mt-6 max-w-3xl leading-relaxed">Você pode usar o MindSteps sozinho em casa ou entrar pela sua escola, família, turma ou rede de ensino.</p>
           </div>
         </div>
       </section>
@@ -32,7 +33,7 @@ export function StartPage() {
                 <div className="w-12 h-12 rounded-2xl bg-primary-100 text-primary-700 flex items-center justify-center mb-5 group-hover:bg-primary-600 group-hover:text-white transition-colors"><Icon className="w-6 h-6" /></div>
                 <h2 className="text-xl font-bold text-slate-900">{profile.label}</h2>
                 <p className="text-sm text-slate-600 mt-3 leading-relaxed">{profile.text}</p>
-                <span className="inline-flex items-center gap-2 mt-6 text-primary-700 font-bold">Criar acesso <ArrowRight className="w-4 h-4" /></span>
+                <span className="inline-flex items-center gap-2 mt-6 text-primary-700 font-bold">Começar <ArrowRight className="w-4 h-4" /></span>
               </Link>
             )
           })}
