@@ -38,4 +38,5 @@ export * from './longitudinalLearningEngine';
 export * from './knowledgeMapEvolution';
 export * from './pedagogicalAIPlanner';
 export * from './schoolProductSuite';
+export * from './adoptionAndEnablementEngine';
 export * from './pedagogicalBrain';
