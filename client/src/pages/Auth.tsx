@@ -5,10 +5,11 @@ import { useAuthStore } from '@/stores'
 import { authApi } from '@/lib/api'
 import { ArrowLeft, Eye, EyeOff, Loader2, Mail, Lock, User } from 'lucide-react'
 
-type AudienceId = 'aluno' | 'familia' | 'professor' | 'coordenacao' | 'direcao' | 'rede'
+type AudienceId = 'independente' | 'aluno' | 'familia' | 'professor' | 'coordenacao' | 'direcao' | 'rede'
 
 const AUDIENCE_LABELS: Record<AudienceId, string> = {
-  aluno: 'Aluno',
+  independente: 'Estudante independente',
+  aluno: 'Aluno vinculado à escola',
   familia: 'Pais e responsáveis',
   professor: 'Professor',
   coordenacao: 'Coordenação pedagógica',
@@ -17,6 +18,7 @@ const AUDIENCE_LABELS: Record<AudienceId, string> = {
 }
 
 const AUDIENCE_DESTINATIONS: Record<AudienceId, string> = {
+  independente: '/dashboard',
   aluno: '/chat',
   familia: '/familia',
   professor: '/professor',
@@ -41,7 +43,7 @@ export function AuthPage() {
     if (isAudience(fromQuery)) return fromQuery
 
     const saved = localStorage.getItem('mindsteps_audience')
-    return isAudience(saved) ? saved : 'aluno'
+    return isAudience(saved) ? saved : 'independente'
   }, [searchParams])
 
   const { setAuth, setProfile } = useAuthStore()
