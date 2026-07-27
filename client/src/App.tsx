@@ -32,6 +32,7 @@ import { LearningGenomePage } from '@/pages/LearningGenome'
 import { KnowledgeGraphPage } from '@/pages/KnowledgeGraph'
 import { ProductTourPage } from '@/pages/ProductTour'
 import { StartPage } from '@/pages/Start'
+import { LearningCenterPage } from '@/pages/LearningCenter'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore()
@@ -61,6 +62,7 @@ function App() {
         <Route path="/" element={<><Header /><HomePage /><Footer /></>} />
         <Route path="/comecar" element={<><Header /><StartPage /><Footer /></>} />
         <Route path="/tour" element={<><Header /><ProductTourPage /><Footer /></>} />
+        <Route path="/academia" element={<><Header /><LearningCenterPage /><Footer /></>} />
         <Route path="/empresa" element={<><Header /><CompanyPage /><Footer /></>} />
         <Route path="/roadmap" element={<><Header /><RoadmapPage /><Footer /></>} />
         <Route path="/seguranca" element={<><Header /><SafetyPage /><Footer /></>} />
