@@ -1,0 +1,93 @@
+name: Build Android AAB
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'android-v*'
+
+permissions:
+  contents: read
+
+jobs:
+  build-aab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install frontend dependencies
+        working-directory: client
+        run: npm install
+
+      - name: Build web application
+        working-directory: client
+        env:
+          VITE_API_URL: https://mindsteps-backend.onrender.com
+        run: npm run build
+
+      - name: Generate Android project
+        working-directory: client
+        run: npx cap add android
+
+      - name: Sync web assets
+        working-directory: client
+        run: npx cap sync android
+
+      - name: Build release bundle
+        working-directory: client/android
+        run: |
+          chmod +x gradlew
+          ./gradlew bundleRelease
+
+      - name: Restore upload keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          test -n "$ANDROID_KEYSTORE_BASE64" || (echo "ANDROID_KEYSTORE_BASE64 secret is missing" && exit 1)
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > mindsteps-upload-key.jks
+
+      - name: Sign Android App Bundle
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          test -n "$ANDROID_KEYSTORE_PASSWORD" || (echo "ANDROID_KEYSTORE_PASSWORD secret is missing" && exit 1)
+          test -n "$ANDROID_KEY_ALIAS" || (echo "ANDROID_KEY_ALIAS secret is missing" && exit 1)
+          test -n "$ANDROID_KEY_PASSWORD" || (echo "ANDROID_KEY_PASSWORD secret is missing" && exit 1)
+          jarsigner \
+            -keystore mindsteps-upload-key.jks \
+            -storepass "$ANDROID_KEYSTORE_PASSWORD" \
+            -keypass "$ANDROID_KEY_PASSWORD" \
+            -sigalg SHA256withRSA \
+            -digestalg SHA-256 \
+            client/android/app/build/outputs/bundle/release/app-release.aab \
+            "$ANDROID_KEY_ALIAS"
+          jarsigner -verify -verbose -certs client/android/app/build/outputs/bundle/release/app-release.aab
+
+      - name: Rename release bundle
+        run: cp client/android/app/build/outputs/bundle/release/app-release.aab MindSteps-1.0.0.aab
+
+      - name: Upload signed AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: MindSteps-Android-AAB
+          path: MindSteps-1.0.0.aab
+          if-no-files-found: error
+          retention-days: 30
