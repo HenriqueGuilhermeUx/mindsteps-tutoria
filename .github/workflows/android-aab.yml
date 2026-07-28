@@ -1,4 +1,4 @@
-name: Build Android AAB
+name: Build Android AAB and APK
 
 on:
   workflow_dispatch:
@@ -10,9 +10,9 @@ permissions:
   contents: read
 
 jobs:
-  build-aab:
+  build-android:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
 
     steps:
       - name: Checkout
@@ -47,11 +47,22 @@ jobs:
         working-directory: client
         run: npx cap sync android
 
-      - name: Build release bundle
+      - name: Build installable debug APK and release bundle
         working-directory: client/android
         run: |
           chmod +x gradlew
-          ./gradlew bundleRelease
+          ./gradlew assembleDebug bundleRelease
+
+      - name: Rename test APK
+        run: cp client/android/app/build/outputs/apk/debug/app-debug.apk MindSteps-teste.apk
+
+      - name: Upload test APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MindSteps-Teste-APK
+          path: MindSteps-teste.apk
+          if-no-files-found: error
+          retention-days: 30
 
       - name: Restore upload keystore
         env:
