@@ -18,6 +18,20 @@ export interface LearningCoreMetadata {
   interventions?: string[]
 }
 
+export interface StudentLearningProfileInput {
+  primaryGoal: string
+  subjects: string[]
+  learningFormats: string[]
+  helpPreferences: string[]
+  challenges: string[]
+  interests: string[]
+  dailyMinutes: number
+  preferredDays: number[]
+  tutorPersona: string
+  currentIntention?: string
+  onboardingCompleted?: boolean
+}
+
 async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   const { token } = useAuthStore.getState()
 
@@ -43,7 +57,6 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   return response.json()
 }
 
-// Auth
 export const authApi = {
   register: (data: { email: string; password: string; name: string; age: string; grade: string }) =>
     request<{ token: string; user: { id: string; email: string }; profile: unknown }>('/api/auth/register', {
@@ -58,7 +71,6 @@ export const authApi = {
     }),
 }
 
-// Study
 export const studyApi = {
   startSession: (tutorId: string) =>
     request<{ sessionId: string }>('/api/study/startSession', {
@@ -88,7 +100,6 @@ export const studyApi = {
     }),
 }
 
-// Profile
 export const profileApi = {
   get: () => request<unknown>('/api/profile'),
 
@@ -102,7 +113,29 @@ export const profileApi = {
     request<{ streak: number; bonus: number }>('/api/profile/claimDaily', { method: 'POST' }),
 }
 
-// Usage
+export const operationsApi = {
+  getLearningProfile: () =>
+    request<{ profile: unknown | null }>('/api/operations/me/learning-profile'),
+
+  saveLearningProfile: (data: StudentLearningProfileInput) =>
+    request<{ learningProfile: unknown; firstMission: { id: string; title?: string } | null }>('/api/operations/me/learning-profile', {
+      method: 'PUT',
+      body: data,
+    }),
+
+  saveRole: (role: string, onboardingCompleted = false) =>
+    request<unknown>('/api/operations/me/role', {
+      method: 'PUT',
+      body: { role, onboardingCompleted },
+    }),
+
+  trackOnboarding: (eventName: string, metadata: Record<string, unknown> = {}) =>
+    request<unknown>('/api/operations/onboarding/events', {
+      method: 'POST',
+      body: { audience: 'independente', eventName, metadata },
+    }),
+}
+
 export const usageApi = {
   check: () => request<{ remaining: number; limit: number }>('/api/usage/check'),
 }
