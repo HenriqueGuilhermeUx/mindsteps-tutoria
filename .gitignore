@@ -6,6 +6,14 @@ node_modules/
 dist/
 .next/
 out/
+client/android/.gradle/
+client/android/build/
+client/android/app/build/
+
+# Android signing
+*.jks
+*.keystore
+key.properties
 
 # Environment files
 .env
