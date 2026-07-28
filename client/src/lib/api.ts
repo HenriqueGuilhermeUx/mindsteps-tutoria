@@ -32,16 +32,38 @@ export interface StudentLearningProfileInput {
   onboardingCompleted?: boolean
 }
 
+export interface TodayOverview {
+  learningProfile: {
+    primary_goal?: string
+    subjects?: string[]
+    daily_minutes?: number
+    tutor_persona?: string
+  } | null
+  mission: {
+    id: string
+    title: string
+    description?: string
+    subject?: string
+    estimated_minutes?: number
+    mission_type?: string
+    status?: string
+  } | null
+  stats: {
+    missionsCompleted: number
+    activePlans: number
+    pendingMissions: number
+  }
+  organizations: Array<{
+    role: string
+    status: string
+    organizations: { id: string; name: string; type: string } | null
+  }>
+}
+
 async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   const { token } = useAuthStore.getState()
-
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-  }
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`
-  }
+  const headers: HeadersInit = { 'Content-Type': 'application/json' }
+  if (token) headers['Authorization'] = `Bearer ${token}`
 
   const response = await fetch(`${API_BASE}${endpoint}`, {
     method: options.method || 'GET',
@@ -53,87 +75,39 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     const error = await response.json().catch(() => ({ message: 'Erro desconhecido' }))
     throw new Error(error.message || `HTTP ${response.status}`)
   }
-
   return response.json()
 }
 
 export const authApi = {
   register: (data: { email: string; password: string; name: string; age: string; grade: string }) =>
-    request<{ token: string; user: { id: string; email: string }; profile: unknown }>('/api/auth/register', {
-      method: 'POST',
-      body: data,
-    }),
-
+    request<{ token: string; user: { id: string; email: string }; profile: unknown }>('/api/auth/register', { method: 'POST', body: data }),
   login: (data: { email: string; password: string }) =>
-    request<{ token: string; user: { id: string; email: string }; profile: unknown }>('/api/auth/login', {
-      method: 'POST',
-      body: data,
-    }),
+    request<{ token: string; user: { id: string; email: string }; profile: unknown }>('/api/auth/login', { method: 'POST', body: data }),
 }
 
 export const studyApi = {
-  startSession: (tutorId: string) =>
-    request<{ sessionId: string }>('/api/study/startSession', {
-      method: 'POST',
-      body: { tutorId },
-    }),
-
+  startSession: (tutorId: string) => request<{ sessionId: string }>('/api/study/startSession', { method: 'POST', body: { tutorId } }),
   sendMessage: (sessionId: string, content: string, subject?: string) =>
-    request<{ response: string; xpEarned: number; cognitiveLevel: number; learningCore?: LearningCoreMetadata }>('/api/study/sendMessage', {
-      method: 'POST',
-      body: { sessionId, content, subject },
-    }),
-
-  getHint: (sessionId: string) =>
-    request<{ hint: string }>('/api/study/hint', {
-      method: 'POST',
-      body: { sessionId },
-    }),
-
-  getHistory: (sessionId: string) =>
-    request<{ messages: Array<{ role: string; content: string; createdAt: string }> }>(`/api/study/history?sessionId=${sessionId}`),
-
-  endSession: (sessionId: string) =>
-    request<{ success: boolean }>('/api/study/endSession', {
-      method: 'POST',
-      body: { sessionId },
-    }),
+    request<{ response: string; xpEarned: number; cognitiveLevel: number; learningCore?: LearningCoreMetadata }>('/api/study/sendMessage', { method: 'POST', body: { sessionId, content, subject } }),
+  getHint: (sessionId: string) => request<{ hint: string }>('/api/study/hint', { method: 'POST', body: { sessionId } }),
+  getHistory: (sessionId: string) => request<{ messages: Array<{ role: string; content: string; createdAt: string }> }>(`/api/study/history?sessionId=${sessionId}`),
+  endSession: (sessionId: string) => request<{ success: boolean }>('/api/study/endSession', { method: 'POST', body: { sessionId } }),
 }
 
 export const profileApi = {
   get: () => request<unknown>('/api/profile'),
-
-  update: (data: { name?: string; tutorId?: string; petType?: string; petName?: string }) =>
-    request<unknown>('/api/profile/update', {
-      method: 'POST',
-      body: data,
-    }),
-
-  claimDaily: () =>
-    request<{ streak: number; bonus: number }>('/api/profile/claimDaily', { method: 'POST' }),
+  update: (data: { name?: string; tutorId?: string; petType?: string; petName?: string }) => request<unknown>('/api/profile/update', { method: 'POST', body: data }),
+  claimDaily: () => request<{ streak: number; bonus: number }>('/api/profile/claimDaily', { method: 'POST' }),
 }
 
 export const operationsApi = {
-  getLearningProfile: () =>
-    request<{ profile: unknown | null }>('/api/operations/me/learning-profile'),
-
+  today: () => request<TodayOverview>('/api/operations/me/today'),
+  getLearningProfile: () => request<{ profile: unknown | null }>('/api/operations/me/learning-profile'),
   saveLearningProfile: (data: StudentLearningProfileInput) =>
-    request<{ learningProfile: unknown; firstMission: { id: string; title?: string } | null }>('/api/operations/me/learning-profile', {
-      method: 'PUT',
-      body: data,
-    }),
-
-  saveRole: (role: string, onboardingCompleted = false) =>
-    request<unknown>('/api/operations/me/role', {
-      method: 'PUT',
-      body: { role, onboardingCompleted },
-    }),
-
+    request<{ learningProfile: unknown; firstMission: { id: string; title?: string } | null }>('/api/operations/me/learning-profile', { method: 'PUT', body: data }),
+  saveRole: (role: string, onboardingCompleted = false) => request<unknown>('/api/operations/me/role', { method: 'PUT', body: { role, onboardingCompleted } }),
   trackOnboarding: (eventName: string, metadata: Record<string, unknown> = {}) =>
-    request<unknown>('/api/operations/onboarding/events', {
-      method: 'POST',
-      body: { audience: 'independente', eventName, metadata },
-    }),
+    request<unknown>('/api/operations/onboarding/events', { method: 'POST', body: { audience: 'independente', eventName, metadata } }),
 }
 
 export const usageApi = {
