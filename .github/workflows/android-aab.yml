@@ -43,6 +43,10 @@ jobs:
         working-directory: client
         run: npx cap add android
 
+      - name: Generate canonical Android icon and splash
+        working-directory: client
+        run: npm run android:assets
+
       - name: Sync web assets
         working-directory: client
         run: npx cap sync android
