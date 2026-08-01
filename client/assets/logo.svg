@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="MindSteps">
+  <defs>
+    <linearGradient id="mindstepsGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="224" fill="url(#mindstepsGradient)"/>
+  <g fill="none" stroke="#FFFFFF" stroke-width="42" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M512 310v410"/>
+    <path d="M512 328C430 270 330 258 250 286v346c92-26 180-4 262 70"/>
+    <path d="M512 328c82-58 182-70 262-42v346c-92-26-180-4-262 70"/>
+    <path d="M250 632c98 8 184 42 262 108 78-66 164-100 262-108"/>
+  </g>
+</svg>
