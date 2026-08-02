@@ -1,8 +1,10 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
+import { Capacitor } from '@capacitor/core'
 import { useAuthStore } from '@/stores'
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { InstitutionalContextBar } from '@/components/InstitutionalContextBar'
+import { MobileAppShell } from '@/components/MobileAppShell'
 import { HomePage } from '@/pages/Home'
 import { AuthPage } from '@/pages/Auth'
 import { RoleAwareOnboardingPage } from '@/pages/RoleAwareOnboarding'
@@ -46,11 +48,21 @@ function InstitutionalLayout({ children }: { children: React.ReactNode }) {
   return <div className="flex flex-col min-h-screen"><Header /><InstitutionalContextBar />{children}<Footer /></div>
 }
 
+function StudentRoute({ children, title }: { children: React.ReactNode; title?: string }) {
+  return <ProtectedRoute><MobileAppShell title={title}>{children}</MobileAppShell></ProtectedRoute>
+}
+
+function RootRoute() {
+  const { isAuthenticated } = useAuthStore()
+  if (Capacitor.isNativePlatform()) return <Navigate to={isAuthenticated ? '/hoje' : '/auth'} replace />
+  return <><Header /><HomePage /><Footer /></>
+}
+
 function App() {
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="min-h-screen bg-slate-50">
       <Routes>
-        <Route path="/" element={<><Header /><HomePage /><Footer /></>} />
+        <Route path="/" element={<RootRoute />} />
         <Route path="/comecar" element={<><Header /><StartPage /><Footer /></>} />
         <Route path="/estudar-em-casa" element={<><Header /><HomeStudyPage /><Footer /></>} />
         <Route path="/tour" element={<><Header /><ProductTourPage /><Footer /></>} />
@@ -72,17 +84,19 @@ function App() {
         <Route path="/piloto" element={<><Header /><PilotCenterPage /><Footer /></>} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/onboarding" element={<ProtectedRoute><RoleAwareOnboardingPage /></ProtectedRoute>} />
-        <Route path="/hoje" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><TodayPage /></div></ProtectedRoute>} />
-        <Route path="/chat" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><div className="flex-1"><ChatPage /></div></div></ProtectedRoute>} />
+
+        <Route path="/hoje" element={<StudentRoute><TodayPage /></StudentRoute>} />
+        <Route path="/chat" element={<StudentRoute title="Tutor"><ChatPage /></StudentRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Navigate to="/hoje" replace /></ProtectedRoute>} />
         <Route path="/dashboard-legado" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><LearningDashboardPage /><Footer /></div></ProtectedRoute>} />
-        <Route path="/journey" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><LearningJourneyPage /><Footer /></div></ProtectedRoute>} />
-        <Route path="/missoes" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><MissionCenterPage /><Footer /></div></ProtectedRoute>} />
-        <Route path="/dominio" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><MasteryCenterPage /><Footer /></div></ProtectedRoute>} />
-        <Route path="/passport" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><LearningPassportPage /><Footer /></div></ProtectedRoute>} />
+        <Route path="/journey" element={<StudentRoute title="Meu mapa"><LearningJourneyPage /></StudentRoute>} />
+        <Route path="/missoes" element={<StudentRoute title="Missões"><MissionCenterPage /></StudentRoute>} />
+        <Route path="/dominio" element={<StudentRoute title="Domínio"><MasteryCenterPage /></StudentRoute>} />
+        <Route path="/passport" element={<StudentRoute title="Passaporte"><LearningPassportPage /></StudentRoute>} />
+        <Route path="/perfil" element={<StudentRoute title="Meu perfil"><ProfilePage /></StudentRoute>} />
+
         <Route path="/professor" element={<ProtectedRoute><InstitutionalLayout><TeacherDashboardPage /></InstitutionalLayout></ProtectedRoute>} />
         <Route path="/familia" element={<ProtectedRoute><InstitutionalLayout><FamilyDashboardPage /></InstitutionalLayout></ProtectedRoute>} />
-        <Route path="/perfil" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><ProfilePage /><Footer /></div></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
