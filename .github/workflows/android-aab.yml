@@ -3,6 +3,8 @@ name: Build Android AAB and APK
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     tags:
       - 'android-v*'
 
@@ -43,9 +45,9 @@ jobs:
         working-directory: client
         run: npx cap add android
 
-      - name: Generate canonical Android icon and splash
+      - name: Generate Android brand assets
         working-directory: client
-        run: npm run android:assets
+        run: npx @capacitor/assets generate --android
 
       - name: Sync web assets
         working-directory: client
