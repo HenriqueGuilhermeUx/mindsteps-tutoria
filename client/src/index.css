@@ -2,13 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  color-scheme: light;
+  --ms-bg: #f6f7fb;
+  --ms-surface: #ffffff;
+  --ms-ink: #121826;
+  --ms-muted: #697386;
+  --ms-primary: #6d5dfc;
+  --ms-primary-soft: #eeecff;
+  --ms-cyan: #19b7c9;
+  --ms-lime: #9bdc28;
+  --ms-orange: #ff9f43;
+  --ms-radius-xl: 28px;
+  --ms-shadow: 0 18px 50px rgba(40, 45, 80, 0.10);
+}
+
 @layer base {
   html {
     font-family: 'Inter', system-ui, sans-serif;
+    background: var(--ms-bg);
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
-    @apply bg-slate-50 text-slate-800;
+    @apply text-slate-800 antialiased;
+    background: var(--ms-bg);
+    overscroll-behavior-y: none;
+  }
+
+  button, a, input, textarea {
+    touch-action: manipulation;
   }
 
   * {
@@ -17,12 +40,43 @@
 }
 
 @layer components {
+  .ms-screen {
+    @apply mx-auto w-full max-w-md px-4;
+  }
+
+  .ms-card {
+    @apply bg-white border border-white/70;
+    border-radius: var(--ms-radius-xl);
+    box-shadow: var(--ms-shadow);
+  }
+
+  .ms-card-soft {
+    @apply bg-white border border-slate-100 shadow-sm;
+    border-radius: 24px;
+  }
+
+  .ms-pressable {
+    @apply transition duration-150 active:scale-[0.98];
+  }
+
+  .ms-kicker {
+    @apply text-[11px] font-extrabold uppercase tracking-[0.16em] text-primary-600;
+  }
+
+  .ms-title {
+    @apply text-[28px] leading-[1.05] font-black tracking-[-0.035em] text-slate-950;
+  }
+
+  .ms-body {
+    @apply text-[15px] leading-6 text-slate-500;
+  }
+
   .btn {
-    @apply inline-flex items-center justify-center px-4 py-2 rounded-xl font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center px-4 py-3 rounded-2xl font-bold transition duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98];
   }
 
   .btn-primary {
-    @apply btn bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+    @apply btn bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 shadow-lg shadow-primary-200/60;
   }
 
   .btn-secondary {
@@ -34,19 +88,19 @@
   }
 
   .input {
-    @apply w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-800 placeholder-slate-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500;
+    @apply w-full px-4 py-3.5 rounded-2xl border border-slate-200 bg-white text-slate-800 placeholder-slate-400 transition duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500;
   }
 
   .card {
-    @apply bg-white rounded-2xl shadow-sm border border-slate-100 p-6;
+    @apply bg-white rounded-3xl shadow-sm border border-slate-100 p-5;
   }
 
   .message-bubble-user {
-    @apply bg-primary-600 text-white rounded-2xl rounded-br-md px-4 py-3 max-w-[80%] ml-auto;
+    @apply bg-primary-600 text-white rounded-[22px] rounded-br-md px-4 py-3 max-w-[84%] ml-auto shadow-sm;
   }
 
   .message-bubble-assistant {
-    @apply bg-slate-100 text-slate-800 rounded-2xl rounded-bl-md px-4 py-3 max-w-[80%];
+    @apply bg-white text-slate-800 rounded-[22px] rounded-bl-md px-4 py-3 max-w-[84%] border border-slate-100 shadow-sm;
   }
 }
 
@@ -59,4 +113,7 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+  .pt-safe { padding-top: env(safe-area-inset-top); }
 }
