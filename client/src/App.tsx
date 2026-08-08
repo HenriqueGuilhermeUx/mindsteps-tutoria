@@ -37,70 +37,25 @@ import { StartPage } from '@/pages/Start'
 import { LearningCenterPage } from '@/pages/LearningCenter'
 import { HomeStudyPage } from '@/pages/HomeStudy'
 import { TodayPage } from '@/pages/Today'
+import { EnemWritingLabPage } from '@/pages/EnemWritingLab'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore()
   if (!isAuthenticated) return <Navigate to="/auth" replace />
   return <>{children}</>
 }
-
-function InstitutionalLayout({ children }: { children: React.ReactNode }) {
-  return <div className="flex flex-col min-h-screen"><Header /><InstitutionalContextBar />{children}<Footer /></div>
-}
-
-function StudentRoute({ children, title }: { children: React.ReactNode; title?: string }) {
-  return <ProtectedRoute><MobileAppShell title={title}>{children}</MobileAppShell></ProtectedRoute>
-}
-
-function RootRoute() {
-  const { isAuthenticated } = useAuthStore()
-  if (Capacitor.isNativePlatform()) return <Navigate to={isAuthenticated ? '/hoje' : '/auth'} replace />
-  return <><Header /><HomePage /><Footer /></>
-}
+function InstitutionalLayout({ children }: { children: React.ReactNode }) { return <div className="flex flex-col min-h-screen"><Header /><InstitutionalContextBar />{children}<Footer /></div> }
+function StudentRoute({ children, title }: { children: React.ReactNode; title?: string }) { return <ProtectedRoute><MobileAppShell title={title}>{children}</MobileAppShell></ProtectedRoute> }
+function RootRoute() { const { isAuthenticated } = useAuthStore(); if (Capacitor.isNativePlatform()) return <Navigate to={isAuthenticated ? '/hoje' : '/auth'} replace />; return <><Header /><HomePage /><Footer /></> }
 
 function App() {
-  return (
-    <div className="min-h-screen bg-slate-50">
-      <Routes>
-        <Route path="/" element={<RootRoute />} />
-        <Route path="/comecar" element={<><Header /><StartPage /><Footer /></>} />
-        <Route path="/estudar-em-casa" element={<><Header /><HomeStudyPage /><Footer /></>} />
-        <Route path="/tour" element={<><Header /><ProductTourPage /><Footer /></>} />
-        <Route path="/academia" element={<><Header /><LearningCenterPage /><Footer /></>} />
-        <Route path="/empresa" element={<><Header /><CompanyPage /><Footer /></>} />
-        <Route path="/roadmap" element={<><Header /><RoadmapPage /><Footer /></>} />
-        <Route path="/seguranca" element={<><Header /><SafetyPage /><Footer /></>} />
-        <Route path="/acessibilidade" element={<><Header /><AccessibilityPage /><Footer /></>} />
-        <Route path="/genoma" element={<><Header /><LearningGenomePage /><Footer /></>} />
-        <Route path="/grafo" element={<><Header /><KnowledgeGraphPage /><Footer /></>} />
-        <Route path="/testes" element={<><Header /><TestLabPage /><Footer /></>} />
-        <Route path="/protocolo" element={<><Header /><TestProtocolPage /><Footer /></>} />
-        <Route path="/inteligencia" element={<><Header /><IntelligenceLabPage /><Footer /></>} />
-        <Route path="/simulador" element={<><Header /><ScenarioSimulatorPage /><Footer /></>} />
-        <Route path="/feedback" element={<><Header /><FeedbackLabPage /><Footer /></>} />
-        <Route path="/escola" element={<InstitutionalLayout><SchoolDashboardPage /></InstitutionalLayout>} />
-        <Route path="/rede" element={<InstitutionalLayout><NetworkDashboardPage /></InstitutionalLayout>} />
-        <Route path="/pesquisa" element={<><Header /><ResearchDashboardPage /><Footer /></>} />
-        <Route path="/piloto" element={<><Header /><PilotCenterPage /><Footer /></>} />
-        <Route path="/auth" element={<AuthPage />} />
-        <Route path="/onboarding" element={<ProtectedRoute><RoleAwareOnboardingPage /></ProtectedRoute>} />
-
-        <Route path="/hoje" element={<StudentRoute><TodayPage /></StudentRoute>} />
-        <Route path="/chat" element={<StudentRoute title="Tutor"><ChatPage /></StudentRoute>} />
-        <Route path="/dashboard" element={<ProtectedRoute><Navigate to="/hoje" replace /></ProtectedRoute>} />
-        <Route path="/dashboard-legado" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><LearningDashboardPage /><Footer /></div></ProtectedRoute>} />
-        <Route path="/journey" element={<StudentRoute title="Meu mapa"><LearningJourneyPage /></StudentRoute>} />
-        <Route path="/missoes" element={<StudentRoute title="Missões"><MissionCenterPage /></StudentRoute>} />
-        <Route path="/dominio" element={<StudentRoute title="Domínio"><MasteryCenterPage /></StudentRoute>} />
-        <Route path="/passport" element={<StudentRoute title="Passaporte"><LearningPassportPage /></StudentRoute>} />
-        <Route path="/perfil" element={<StudentRoute title="Meu perfil"><ProfilePage /></StudentRoute>} />
-
-        <Route path="/professor" element={<ProtectedRoute><InstitutionalLayout><TeacherDashboardPage /></InstitutionalLayout></ProtectedRoute>} />
-        <Route path="/familia" element={<ProtectedRoute><InstitutionalLayout><FamilyDashboardPage /></InstitutionalLayout></ProtectedRoute>} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </div>
-  )
+  return <div className="min-h-screen bg-slate-50"><Routes>
+    <Route path="/" element={<RootRoute />} />
+    <Route path="/comecar" element={<><Header /><StartPage /><Footer /></>} /><Route path="/estudar-em-casa" element={<><Header /><HomeStudyPage /><Footer /></>} /><Route path="/tour" element={<><Header /><ProductTourPage /><Footer /></>} /><Route path="/academia" element={<><Header /><LearningCenterPage /><Footer /></>} /><Route path="/empresa" element={<><Header /><CompanyPage /><Footer /></>} /><Route path="/roadmap" element={<><Header /><RoadmapPage /><Footer /></>} /><Route path="/seguranca" element={<><Header /><SafetyPage /><Footer /></>} /><Route path="/acessibilidade" element={<><Header /><AccessibilityPage /><Footer /></>} /><Route path="/genoma" element={<><Header /><LearningGenomePage /><Footer /></>} /><Route path="/grafo" element={<><Header /><KnowledgeGraphPage /><Footer /></>} /><Route path="/testes" element={<><Header /><TestLabPage /><Footer /></>} /><Route path="/protocolo" element={<><Header /><TestProtocolPage /><Footer /></>} /><Route path="/inteligencia" element={<><Header /><IntelligenceLabPage /><Footer /></>} /><Route path="/simulador" element={<><Header /><ScenarioSimulatorPage /><Footer /></>} /><Route path="/feedback" element={<><Header /><FeedbackLabPage /><Footer /></>} /><Route path="/escola" element={<InstitutionalLayout><SchoolDashboardPage /></InstitutionalLayout>} /><Route path="/rede" element={<InstitutionalLayout><NetworkDashboardPage /></InstitutionalLayout>} /><Route path="/pesquisa" element={<><Header /><ResearchDashboardPage /><Footer /></>} /><Route path="/piloto" element={<><Header /><PilotCenterPage /><Footer /></>} />
+    <Route path="/auth" element={<AuthPage />} /><Route path="/onboarding" element={<ProtectedRoute><RoleAwareOnboardingPage /></ProtectedRoute>} />
+    <Route path="/hoje" element={<StudentRoute><TodayPage /></StudentRoute>} /><Route path="/chat" element={<StudentRoute title="Tutor"><ChatPage /></StudentRoute>} /><Route path="/dashboard" element={<ProtectedRoute><Navigate to="/hoje" replace /></ProtectedRoute>} /><Route path="/dashboard-legado" element={<ProtectedRoute><div className="flex flex-col min-h-screen"><Header /><LearningDashboardPage /><Footer /></div></ProtectedRoute>} /><Route path="/journey" element={<StudentRoute title="Meu mapa"><LearningJourneyPage /></StudentRoute>} /><Route path="/missoes" element={<StudentRoute title="Missões"><MissionCenterPage /></StudentRoute>} /><Route path="/dominio" element={<StudentRoute title="Domínio"><MasteryCenterPage /></StudentRoute>} /><Route path="/passport" element={<StudentRoute title="Passaporte"><LearningPassportPage /></StudentRoute>} /><Route path="/perfil" element={<StudentRoute title="Meu perfil"><ProfilePage /></StudentRoute>} />
+    <Route path="/enem/redacao" element={<StudentRoute title="Redação ENEM"><EnemWritingLabPage /></StudentRoute>} />
+    <Route path="/professor" element={<ProtectedRoute><InstitutionalLayout><TeacherDashboardPage /></InstitutionalLayout></ProtectedRoute>} /><Route path="/familia" element={<ProtectedRoute><InstitutionalLayout><FamilyDashboardPage /></InstitutionalLayout></ProtectedRoute>} /><Route path="*" element={<Navigate to="/" replace />} />
+  </Routes></div>
 }
-
 export default App
