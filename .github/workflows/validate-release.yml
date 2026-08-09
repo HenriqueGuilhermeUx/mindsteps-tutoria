@@ -1,0 +1,58 @@
+name: Validate MindSteps Release
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install client dependencies
+        working-directory: client
+        run: npm install --no-audit --no-fund
+
+      - name: TypeScript validation
+        working-directory: client
+        run: npm run typecheck
+
+      - name: Build current public release mode
+        working-directory: client
+        env:
+          VITE_ENEM_V2_ENABLED: 'false'
+        run: npm run build
+
+      - name: Build post-Play ENEM V2 mode
+        working-directory: client
+        env:
+          VITE_ENEM_V2_ENABLED: 'true'
+        run: npm run build
+
+      - name: Validate Android identity
+        run: |
+          grep -q "appId: 'br.com.alternativeventures.mindsteps'" client/capacitor.config.ts
+          grep -q "appName: 'MindSteps'" client/capacitor.config.ts
+
+      - name: Validate legal pages are versioned
+        run: |
+          test -f docs/privacy.html
+          test -f docs/delete-account.html
+          test -f docs/data-deletion.html
+
+      - name: Release gate summary
+        run: |
+          echo "Current public build: ENEM V2 hidden"
+          echo "Post-Play build: ENEM V2 compiles when explicitly enabled"
+          echo "Package: br.com.alternativeventures.mindsteps"
