@@ -1,6 +1,7 @@
 import { useAuthStore } from '@/stores'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://mindsteps-backend.onrender.com'
+const REQUEST_TIMEOUT_MS = 20000
 
 interface RequestOptions { method?: 'GET' | 'POST' | 'PUT' | 'DELETE'; body?: unknown }
 
@@ -9,10 +10,41 @@ export interface StudentLearningProfileInput { primaryGoal: string; subjects: st
 export interface TodayOverview { learningProfile: { primary_goal?: string; subjects?: string[]; daily_minutes?: number; tutor_persona?: string } | null; mission: { id: string; title: string; description?: string; subject?: string; estimated_minutes?: number; mission_type?: string; status?: string } | null; stats: { missionsCompleted: number; activePlans: number; pendingMissions: number }; organizations: Array<{ role: string; status: string; organizations: { id: string; name: string; type: string } | null }> }
 
 async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-  const { token } = useAuthStore.getState(); const headers: HeadersInit = { 'Content-Type': 'application/json' }; if (token) headers['Authorization'] = `Bearer ${token}`
-  const response = await fetch(`${API_BASE}${endpoint}`, { method: options.method || 'GET', headers, body: options.body ? JSON.stringify(options.body) : undefined })
-  if (!response.ok) { const error = await response.json().catch(() => ({ message: 'Erro desconhecido' })); throw new Error(error.message || `HTTP ${response.status}`) }
-  return response.json()
+  const { token } = useAuthStore.getState()
+  const headers: HeadersInit = { 'Content-Type': 'application/json' }
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const controller = new AbortController()
+  const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+
+  try {
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      method: options.method || 'GET',
+      headers,
+      body: options.body ? JSON.stringify(options.body) : undefined,
+      signal: controller.signal,
+    })
+
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({} as { message?: string }))
+      if (response.status === 401) throw new Error('E-mail ou senha incorretos.')
+      if (response.status === 403) throw new Error('Acesso recusado. Verifique a conta e tente novamente.')
+      if (response.status >= 500) throw new Error('O serviço está temporariamente indisponível. Tente novamente em instantes.')
+      throw new Error(payload.message || `Não foi possível concluir a solicitação (HTTP ${response.status}).`)
+    }
+
+    return response.json()
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new Error('O servidor demorou para responder. Verifique sua conexão e tente novamente.')
+    }
+    if (error instanceof TypeError) {
+      throw new Error('Não foi possível conectar ao MindSteps. Verifique sua internet e tente novamente.')
+    }
+    throw error
+  } finally {
+    window.clearTimeout(timeout)
+  }
 }
 
 export const authApi = {
