@@ -20,10 +20,23 @@ export interface EnemSimulationResult {
   completedAt: string
 }
 
+export interface EnemStudyProfile {
+  goal: string
+  targetCourse: string
+  targetScore: number
+  dailyMinutes: number
+  studyDaysPerWeek: number
+  preferredMode: 'curto' | 'equilibrado' | 'intensivo'
+  confidence: Record<EnemArea, number>
+  completedAt: string
+}
+
 interface EnemState {
+  profile: EnemStudyProfile | null
   attempts: EnemQuestionAttempt[]
   simulations: EnemSimulationResult[]
   dailyCompleted: string[]
+  saveProfile: (profile: Omit<EnemStudyProfile, 'completedAt'>) => void
   recordAttempt: (attempt: Omit<EnemQuestionAttempt, 'id' | 'createdAt'>) => void
   recordSimulation: (result: Omit<EnemSimulationResult, 'id' | 'completedAt'>) => void
   toggleDailyStep: (stepKey: string) => void
@@ -33,9 +46,11 @@ interface EnemState {
 const uid = () => `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 
 export const useEnemStore = create<EnemState>()(persist((set) => ({
+  profile: null,
   attempts: [],
   simulations: [],
   dailyCompleted: [],
+  saveProfile: (profile) => set({ profile: { ...profile, completedAt: new Date().toISOString() } }),
   recordAttempt: (attempt) => set((state) => ({
     attempts: [...state.attempts, { ...attempt, id: uid(), createdAt: new Date().toISOString() }].slice(-500),
   })),
