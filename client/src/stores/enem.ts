@@ -13,11 +13,26 @@ export interface EnemQuestionAttempt {
   createdAt: string
 }
 
+export interface EnemSimulationAreaResult {
+  area: Exclude<EnemArea, 'Redação'>
+  answered: number
+  correct: number
+  skipped: number
+  marked: number
+  secondsSpent: number
+}
+
 export interface EnemSimulationResult {
   id: string
   elapsedSeconds: number
   markedQuestions: number
   completedAt: string
+  answeredQuestions?: number
+  correctQuestions?: number
+  skippedQuestions?: number
+  reviewChanges?: number
+  areaResults?: EnemSimulationAreaResult[]
+  strategyScore?: number
 }
 
 export interface EnemStudyProfile {
