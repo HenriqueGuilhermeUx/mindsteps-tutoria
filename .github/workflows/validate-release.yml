@@ -28,16 +28,16 @@ jobs:
         working-directory: client
         run: npm run typecheck
 
-      - name: Build current public release mode
-        working-directory: client
-        env:
-          VITE_ENEM_V2_ENABLED: 'false'
-        run: npm run build
-
-      - name: Build post-Play ENEM V2 mode
+      - name: Build public ENEM V2 release
         working-directory: client
         env:
           VITE_ENEM_V2_ENABLED: 'true'
+        run: npm run build
+
+      - name: Build emergency kill-switch mode
+        working-directory: client
+        env:
+          VITE_ENEM_V2_ENABLED: 'false'
         run: npm run build
 
       - name: Validate Android identity
@@ -53,6 +53,6 @@ jobs:
 
       - name: Release gate summary
         run: |
-          echo "Current public build: ENEM V2 hidden"
-          echo "Post-Play build: ENEM V2 compiles when explicitly enabled"
+          echo "Public build: ENEM V2 enabled"
+          echo "Emergency rollback mode: ENEM V2 can be disabled by environment flag"
           echo "Package: br.com.alternativeventures.mindsteps"
