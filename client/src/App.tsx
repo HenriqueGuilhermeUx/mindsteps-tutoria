@@ -6,6 +6,7 @@ import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { InstitutionalContextBar } from '@/components/InstitutionalContextBar'
 import { MobileAppShell } from '@/components/MobileAppShell'
+import { EnemCloudBridge } from '@/components/EnemCloudBridge'
 import { HomePage } from '@/pages/Home'
 import { AuthPage } from '@/pages/Auth'
 import { RoleAwareOnboardingPage } from '@/pages/RoleAwareOnboarding'
@@ -62,7 +63,7 @@ function InstitutionalLayout({ children }: { children: React.ReactNode }) { retu
 function StudentRoute({ children, title }: { children: React.ReactNode; title?: string }) { return <ProtectedRoute><MobileAppShell title={title}>{children}</MobileAppShell></ProtectedRoute> }
 function EnemV2Route({ children, title }: { children: React.ReactNode; title?: string }) { if (!features.enemV2) return <Navigate to={Capacitor.isNativePlatform() ? '/hoje' : '/'} replace />; return <StudentRoute title={title}>{children}</StudentRoute> }
 function RootRoute() { const { isAuthenticated } = useAuthStore(); if (Capacitor.isNativePlatform()) return <Navigate to={isAuthenticated ? '/hoje' : '/auth'} replace />; return <><Header /><HomePage /><Footer /></> }
-function App() { return <div className="min-h-screen bg-slate-50"><Routes>
+function App() { return <div className="min-h-screen bg-slate-50"><EnemCloudBridge/><Routes>
 <Route path="/" element={<RootRoute />} />
 <Route path="/comecar" element={<><Header /><StartPage /><Footer /></>} /><Route path="/estudar-em-casa" element={<><Header /><HomeStudyPage /><Footer /></>} /><Route path="/tour" element={<><Header /><ProductTourPage /><Footer /></>} /><Route path="/academia" element={<><Header /><LearningCenterPage /><Footer /></>} /><Route path="/empresa" element={<><Header /><CompanyPage /><Footer /></>} /><Route path="/roadmap" element={<><Header /><RoadmapPage /><Footer /></>} /><Route path="/seguranca" element={<><Header /><SafetyPage /><Footer /></>} /><Route path="/acessibilidade" element={<><Header /><AccessibilityPage /><Footer /></>} /><Route path="/genoma" element={<><Header /><LearningGenomePage /><Footer /></>} /><Route path="/grafo" element={<><Header /><KnowledgeGraphPage /><Footer /></>} /><Route path="/testes" element={<><Header /><TestLabPage /><Footer /></>} /><Route path="/protocolo" element={<><Header /><TestProtocolPage /><Footer /></>} /><Route path="/inteligencia" element={<><Header /><IntelligenceLabPage /><Footer /></>} /><Route path="/simulador" element={<><Header /><ScenarioSimulatorPage /><Footer /></>} /><Route path="/feedback" element={<><Header /><FeedbackLabPage /><Footer /></>} /><Route path="/escola" element={<InstitutionalLayout><SchoolDashboardPage /></InstitutionalLayout>} /><Route path="/rede" element={<InstitutionalLayout><NetworkDashboardPage /></InstitutionalLayout>} /><Route path="/pesquisa" element={<><Header /><ResearchDashboardPage /><Footer /></>} /><Route path="/piloto" element={<><Header /><PilotCenterPage /><Footer /></>} />
 <Route path="/auth" element={<AuthPage />} /><Route path="/onboarding" element={<ProtectedRoute><RoleAwareOnboardingPage /></ProtectedRoute>} />
