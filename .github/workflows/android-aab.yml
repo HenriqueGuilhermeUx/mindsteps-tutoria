@@ -35,6 +35,10 @@ jobs:
         working-directory: client
         run: npm install
 
+      - name: TypeScript validation
+        working-directory: client
+        run: npm run typecheck
+
       - name: Build web application
         working-directory: client
         env:
@@ -50,12 +54,12 @@ jobs:
         working-directory: client
         run: |
           test -f android/app/build.gradle || (echo "android/app/build.gradle not found" && exit 1)
-          sed -i -E 's/versionCode[[:space:]]+[0-9]+/versionCode 4/' android/app/build.gradle
-          sed -i -E 's/versionName[[:space:]]+"[^"]+"/versionName "2.0.0"/' android/app/build.gradle
+          sed -i -E 's/versionCode[[:space:]]+[0-9]+/versionCode 5/' android/app/build.gradle
+          sed -i -E 's/versionName[[:space:]]+"[^"]+"/versionName "2.1.0"/' android/app/build.gradle
           echo "Android release identity:"
           grep -E 'applicationId|versionCode|versionName' android/app/build.gradle
-          grep -q 'versionCode 4' android/app/build.gradle || (echo "versionCode was not set to 4" && exit 1)
-          grep -q 'versionName "2.0.0"' android/app/build.gradle || (echo "versionName was not set to 2.0.0" && exit 1)
+          grep -q 'versionCode 5' android/app/build.gradle || (echo "versionCode was not set to 5" && exit 1)
+          grep -q 'versionName "2.1.0"' android/app/build.gradle || (echo "versionName was not set to 2.1.0" && exit 1)
 
       - name: Generate Android brand assets
         working-directory: client
@@ -69,8 +73,8 @@ jobs:
         working-directory: client
         run: |
           grep -E 'applicationId|versionCode|versionName' android/app/build.gradle
-          grep -q 'versionCode 4' android/app/build.gradle || (echo "versionCode changed after cap sync" && exit 1)
-          grep -q 'versionName "2.0.0"' android/app/build.gradle || (echo "versionName changed after cap sync" && exit 1)
+          grep -q 'versionCode 5' android/app/build.gradle || (echo "versionCode changed after cap sync" && exit 1)
+          grep -q 'versionName "2.1.0"' android/app/build.gradle || (echo "versionName changed after cap sync" && exit 1)
 
       - name: Build installable debug APK and release bundle
         working-directory: client/android
@@ -79,13 +83,13 @@ jobs:
           ./gradlew assembleDebug bundleRelease
 
       - name: Rename test APK
-        run: cp client/android/app/build/outputs/apk/debug/app-debug.apk MindSteps-2.0.0-vc4-teste.apk
+        run: cp client/android/app/build/outputs/apk/debug/app-debug.apk MindSteps-2.1.0-vc5-teste.apk
 
       - name: Upload test APK
         uses: actions/upload-artifact@v4
         with:
-          name: MindSteps-2.0.0-vc4-Teste-APK
-          path: MindSteps-2.0.0-vc4-teste.apk
+          name: MindSteps-2.1.0-vc5-Teste-APK
+          path: MindSteps-2.1.0-vc5-teste.apk
           if-no-files-found: error
           retention-days: 30
 
@@ -116,12 +120,12 @@ jobs:
           jarsigner -verify -verbose -certs client/android/app/build/outputs/bundle/release/app-release.aab
 
       - name: Rename release bundle
-        run: cp client/android/app/build/outputs/bundle/release/app-release.aab MindSteps-2.0.0-vc4.aab
+        run: cp client/android/app/build/outputs/bundle/release/app-release.aab MindSteps-2.1.0-vc5.aab
 
       - name: Upload signed AAB
         uses: actions/upload-artifact@v4
         with:
-          name: MindSteps-2.0.0-vc4-Android-AAB
-          path: MindSteps-2.0.0-vc4.aab
+          name: MindSteps-2.1.0-vc5-Android-AAB
+          path: MindSteps-2.1.0-vc5.aab
           if-no-files-found: error
           retention-days: 30
