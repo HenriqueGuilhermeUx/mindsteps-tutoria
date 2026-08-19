@@ -1,4 +1,5 @@
 import { useAuthStore } from '@/stores'
+import type { EnemCloudSnapshot } from '@/stores/enem'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://mindsteps-backend.onrender.com'
 const REQUEST_TIMEOUT_MS = 20000
@@ -52,6 +53,11 @@ export const institutionApi = {
   list: () => request<{ links: InstitutionLink[] }>('/api/institutions/me/links'),
   join: (code: string) => request<{ link: InstitutionLink }>('/api/institutions/me/links/join', { method: 'POST', body: { code } }),
   leave: (linkId: string) => request<{ success: boolean }>(`/api/institutions/me/links/${encodeURIComponent(linkId)}`, { method: 'DELETE' }),
+}
+
+export const enemCloudApi = {
+  get: () => request<{ state: EnemCloudSnapshot | null }>('/api/enem/state'),
+  save: (state: EnemCloudSnapshot) => request<{ updatedAt: string }>('/api/enem/state', { method: 'PUT', body: state }),
 }
 
 export interface WritingSyncPayload { clientId: string; theme: string; area: string; focus: string; status: string; versions: Array<{ clientId: string; createdAt: string; text: string; wordCount: number }>; drills: Array<{ clientId: string; skill: string; answer: string; sourceVersionClientId?: string; createdAt: string }> }
