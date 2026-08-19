@@ -55,21 +55,27 @@ export interface EnemDiagnosticResult {
   writingSignal: number
 }
 
-interface EnemState {
+export interface EnemCloudSnapshot {
   profile: EnemStudyProfile | null
   diagnostic: EnemDiagnosticResult | null
   attempts: EnemQuestionAttempt[]
   simulations: EnemSimulationResult[]
   dailyCompleted: string[]
+  updatedAt: string
+}
+
+interface EnemState extends EnemCloudSnapshot {
   saveProfile: (profile: Omit<EnemStudyProfile, 'completedAt'>) => void
   saveDiagnostic: (diagnostic: Omit<EnemDiagnosticResult, 'completedAt'>) => void
   recordAttempt: (attempt: Omit<EnemQuestionAttempt, 'id' | 'createdAt'>) => void
   recordSimulation: (result: Omit<EnemSimulationResult, 'id' | 'completedAt'>) => void
   toggleDailyStep: (stepKey: string) => void
   resetPractice: () => void
+  hydrateFromCloud: (snapshot: EnemCloudSnapshot) => void
 }
 
 const uid = () => `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+const now = () => new Date().toISOString()
 
 export const useEnemStore = create<EnemState>()(persist((set) => ({
   profile: null,
@@ -77,18 +83,12 @@ export const useEnemStore = create<EnemState>()(persist((set) => ({
   attempts: [],
   simulations: [],
   dailyCompleted: [],
-  saveProfile: (profile) => set({ profile: { ...profile, completedAt: new Date().toISOString() } }),
-  saveDiagnostic: (diagnostic) => set({ diagnostic: { ...diagnostic, completedAt: new Date().toISOString() } }),
-  recordAttempt: (attempt) => set((state) => ({
-    attempts: [...state.attempts, { ...attempt, id: uid(), createdAt: new Date().toISOString() }].slice(-500),
-  })),
-  recordSimulation: (result) => set((state) => ({
-    simulations: [{ ...result, id: uid(), completedAt: new Date().toISOString() }, ...state.simulations].slice(0, 50),
-  })),
-  toggleDailyStep: (stepKey) => set((state) => ({
-    dailyCompleted: state.dailyCompleted.includes(stepKey)
-      ? state.dailyCompleted.filter((key) => key !== stepKey)
-      : [...state.dailyCompleted, stepKey],
-  })),
-  resetPractice: () => set({ attempts: [] }),
+  updatedAt: new Date(0).toISOString(),
+  saveProfile: (profile) => set({ profile: { ...profile, completedAt: now() }, updatedAt: now() }),
+  saveDiagnostic: (diagnostic) => set({ diagnostic: { ...diagnostic, completedAt: now() }, updatedAt: now() }),
+  recordAttempt: (attempt) => set((state) => ({ attempts: [...state.attempts, { ...attempt, id: uid(), createdAt: now() }].slice(-500), updatedAt: now() })),
+  recordSimulation: (result) => set((state) => ({ simulations: [{ ...result, id: uid(), completedAt: now() }, ...state.simulations].slice(0, 50), updatedAt: now() })),
+  toggleDailyStep: (stepKey) => set((state) => ({ dailyCompleted: state.dailyCompleted.includes(stepKey) ? state.dailyCompleted.filter((key) => key !== stepKey) : [...state.dailyCompleted, stepKey], updatedAt: now() })),
+  resetPractice: () => set({ attempts: [], updatedAt: now() }),
+  hydrateFromCloud: (snapshot) => set({ profile: snapshot.profile, diagnostic: snapshot.diagnostic, attempts: snapshot.attempts || [], simulations: snapshot.simulations || [], dailyCompleted: snapshot.dailyCompleted || [], updatedAt: snapshot.updatedAt || now() }),
 }), { name: 'mindsteps-enem-learning-state' }))
