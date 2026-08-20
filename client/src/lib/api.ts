@@ -20,7 +20,7 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     const response = await fetch(`${API_BASE}${endpoint}`, { method: options.method || 'GET', headers, body: options.body ? JSON.stringify(options.body) : undefined, signal: controller.signal })
     if (!response.ok) {
       const payload = await response.json().catch(() => ({} as { message?: string }))
-      if (response.status === 401) throw new Error('Sessão expirada. Entre novamente para continuar.')
+      if (response.status === 401) throw new Error(endpoint === '/api/auth/login' ? 'E-mail ou senha incorretos.' : 'Sessão expirada. Entre novamente para continuar.')
       if (response.status === 403) throw new Error(payload.message || 'Acesso recusado. Verifique sua permissão e tente novamente.')
       if (response.status >= 500) throw new Error('O serviço está temporariamente indisponível. Tente novamente em instantes.')
       throw new Error(payload.message || `Não foi possível concluir a solicitação (HTTP ${response.status}).`)
