@@ -20,8 +20,8 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     const response = await fetch(`${API_BASE}${endpoint}`, { method: options.method || 'GET', headers, body: options.body ? JSON.stringify(options.body) : undefined, signal: controller.signal })
     if (!response.ok) {
       const payload = await response.json().catch(() => ({} as { message?: string }))
-      if (response.status === 401) throw new Error('E-mail ou senha incorretos.')
-      if (response.status === 403) throw new Error('Acesso recusado. Verifique a conta e tente novamente.')
+      if (response.status === 401) throw new Error('Sessão expirada. Entre novamente para continuar.')
+      if (response.status === 403) throw new Error(payload.message || 'Acesso recusado. Verifique sua permissão e tente novamente.')
       if (response.status >= 500) throw new Error('O serviço está temporariamente indisponível. Tente novamente em instantes.')
       throw new Error(payload.message || `Não foi possível concluir a solicitação (HTTP ${response.status}).`)
     }
@@ -53,6 +53,19 @@ export const institutionApi = {
   list: () => request<{ links: InstitutionLink[] }>('/api/institutions/me/links'),
   join: (code: string) => request<{ link: InstitutionLink }>('/api/institutions/me/links/join', { method: 'POST', body: { code } }),
   leave: (linkId: string) => request<{ success: boolean }>(`/api/institutions/me/links/${encodeURIComponent(linkId)}`, { method: 'DELETE' }),
+}
+
+export interface ManagedInstitution { id:string; name:string; type:string; city?:string|null; state?:string|null; parent_institution_id?:string|null; role:string }
+export interface InstitutionStudent { id:string; userId:string; name?:string; grade?:string; xp?:number; level?:number; streak?:number; last_study_date?:string|null; joinedAt:string }
+export interface InstitutionInvite { code:string; label?:string|null; active:boolean; expires_at?:string|null; max_uses?:number|null; uses_count:number; created_at:string }
+export interface InstitutionOverview { institution:ManagedInstitution; metrics:{ students:number; activeToday:number; avgXp:number; avgStreak:number; activeInvites:number }; students:InstitutionStudent[]; gradeCounts:Record<string,number>; invites:InstitutionInvite[] }
+export const institutionAdminApi = {
+  list: () => request<{ institutions: ManagedInstitution[] }>('/api/institutions/manage'),
+  create: (data:{ name:string; type?:string; city?:string; state?:string; parentInstitutionId?:string|null }) => request<{ institution:ManagedInstitution }>('/api/institutions/manage', { method:'POST', body:data }),
+  overview: (institutionId:string) => request<InstitutionOverview>(`/api/institutions/manage/${encodeURIComponent(institutionId)}/overview`),
+  students: (institutionId:string) => request<{ students:InstitutionStudent[] }>(`/api/institutions/manage/${encodeURIComponent(institutionId)}/students`),
+  invites: (institutionId:string) => request<{ invites:InstitutionInvite[] }>(`/api/institutions/manage/${encodeURIComponent(institutionId)}/invites`),
+  createInvite: (institutionId:string, data:{ label?:string; expiresAt?:string|null; maxUses?:number|null }) => request<{ invite:InstitutionInvite }>(`/api/institutions/manage/${encodeURIComponent(institutionId)}/invites`, { method:'POST', body:data }),
 }
 
 export const enemCloudApi = {
