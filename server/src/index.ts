@@ -7,6 +7,7 @@ dotenv.config()
 import authRouter from './routers/auth.js'
 import studyRouter from './routers/study.js'
 import institutionLinksRouter from './routers/institutionLinks.js'
+import institutionAdminRouter from './routers/institutionAdmin.js'
 import enemStateRouter from './routers/enemState.js'
 
 const app = express()
@@ -22,6 +23,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRouter)
 app.use('/api', studyRouter)
 app.use('/api/institutions', institutionLinksRouter)
+app.use('/api/institutions', institutionAdminRouter)
 app.use('/api/enem', enemStateRouter)
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
