@@ -39,14 +39,23 @@ export async function joinInstitutionByCode(userId: string, rawCode: string) {
 
   const { data: invite, error: inviteError } = await supabase
     .from('mindsteps_institution_invites')
-    .select('code,institution_id,active,expires_at,mindsteps_institutions(id,name,type,city,state)')
+    .select('code,institution_id,active,expires_at,max_uses,uses_count,mindsteps_institutions(id,name,type,city,state)')
     .eq('code', code)
     .single()
 
   if (inviteError || !invite) throw new Error('Código de convite não encontrado')
   if (!invite.active) throw new Error('Este convite não está mais ativo')
   if (invite.expires_at && new Date(invite.expires_at).getTime() < Date.now()) throw new Error('Este convite expirou')
+  if (invite.max_uses && Number(invite.uses_count || 0) >= Number(invite.max_uses)) throw new Error('Este convite atingiu o limite de usos')
 
+  const { data: existing } = await supabase
+    .from('mindsteps_student_links')
+    .select('id,status,joined_at')
+    .eq('user_id', userId)
+    .eq('institution_id', invite.institution_id)
+    .maybeSingle()
+
+  const wasAlreadyActive = existing?.status === 'active'
   const { data: link, error } = await supabase
     .from('mindsteps_student_links')
     .upsert({ user_id: userId, institution_id: invite.institution_id, role: 'student', status: 'active', left_at: null }, { onConflict: 'user_id,institution_id' })
@@ -54,6 +63,15 @@ export async function joinInstitutionByCode(userId: string, rawCode: string) {
     .single()
 
   if (error) throw new Error(error.message)
+
+  if (!wasAlreadyActive) {
+    const nextUses = Number(invite.uses_count || 0) + 1
+    const shouldDisable = invite.max_uses ? nextUses >= Number(invite.max_uses) : false
+    await supabase
+      .from('mindsteps_institution_invites')
+      .update({ uses_count: nextUses, active: shouldDisable ? false : invite.active })
+      .eq('code', code)
+  }
 
   return {
     id: link.id,
