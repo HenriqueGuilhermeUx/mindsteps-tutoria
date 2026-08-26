@@ -32,6 +32,12 @@ export async function createHumanOverride(input:{ userId:string; systemKey:strin
   return data
 }
 
+export async function listHumanOverrides(userId:string,limit=100){
+  const {data,error}=await supabase.from('mindsteps_ai_human_overrides').select('*').eq('user_id',userId).order('created_at',{ascending:false}).limit(limit)
+  if(error)throw new Error(error.message)
+  return data||[]
+}
+
 export async function saveAILiteracyProgress(input:{ userId:string; learningId:number; missionId:string; status:'started'|'completed'; evidence?:string|null; reflection?:string|null }) {
   const { data, error } = await supabase.from('mindsteps_ai_literacy_progress').upsert({
     user_id: input.userId,
