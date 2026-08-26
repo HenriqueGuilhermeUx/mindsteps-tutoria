@@ -82,6 +82,14 @@ export const writingApi = {
   effects: () => request<{ effects: Array<{ skill: string; beforeScore: number; afterScore: number; delta: number; createdAt: string }> }>('/api/writing/effects'),
 }
 
+export type AuthorshipEventType='student_original'|'ai_feedback'|'ai_suggestion'|'student_revision'|'teacher_feedback'|'final_submission'
+export interface AuthorshipSummary { studentAuthoredShare:number; aiAssistanceShare:number; humanReviewShare:number; events:number; explanation:string[] }
+export interface AuthorshipEvent { type:AuthorshipEventType; content:string; metadata?:Record<string,unknown>; createdAt:string }
+export const learningSafetyApi={
+  addAuthorshipEvent:(data:{workId:string;type:AuthorshipEventType;content?:string;metadata?:Record<string,unknown>})=>request<{event:Record<string,unknown>}>('/api/learning-safety/authorship/events',{method:'POST',body:data}),
+  authorship:(workId:string)=>request<{events:AuthorshipEvent[];summary:AuthorshipSummary}>(`/api/learning-safety/authorship/${encodeURIComponent(workId)}`),
+}
+
 export interface ResponsibleAIMetadata { enabled:boolean; stage:string; assistanceMode:string; confidence:string; explanation:string; humanReviewAvailable:boolean }
 export interface LearningOSMetadata { intervention:string; confidence:number; confidenceBand:string; explanation:string; safeguards:Record<string,unknown>; nextAction:{type:string;label:string;payload?:Record<string,unknown>} }
 export interface AILiteracyLearning { id:number; title:string; domain:string; description?:string }
@@ -95,10 +103,12 @@ export const responsibleAIApi = {
   override: (data:{systemKey:string;recommendationId?:string;decision:'accepted'|'adjusted'|'rejected';reason?:string}) => request<unknown>('/api/responsible-ai/overrides',{method:'POST',body:data}),
 }
 
+export interface ChildRightsPreferences { aiPersonalizationAllowed:boolean; institutionSharingAllowed:boolean; researchUseAllowed:boolean; productImprovementAllowed:boolean; marketingAllowed:boolean; retentionMode:'minimum'|'standard'; guardianUserId?:string|null; noticeVersion?:string }
 export interface LearningDecision { id:string; system_key:string; decision_type:string; subject?:string|null; skill?:string|null; confidence:number; explanation:string; human_review_required:boolean; created_at:string; evidence?:Record<string,unknown> }
 export const learningGovernanceApi = {
   decisions: (limit=30) => request<{decisions:LearningDecision[]}>(`/api/learning-governance/decisions?limit=${limit}`),
   childRights: () => request<{preferences:Record<string,unknown>}>('/api/learning-governance/child-rights'),
+  saveChildRights: (data:Partial<ChildRightsPreferences>) => request<{preferences:Record<string,unknown>}>('/api/learning-governance/child-rights',{method:'PUT',body:data}),
   competencies: () => request<{domains:Array<{key?:string;title?:string;name?:string;description?:string}>}>('/api/learning-governance/teacher/competencies'),
   teacherSignals: (institutionId?:string) => request<{events:Array<Record<string,unknown>>}>(`/api/learning-governance/teacher/signals${institutionId?`?institutionId=${encodeURIComponent(institutionId)}`:''}`),
 }
