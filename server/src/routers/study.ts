@@ -14,6 +14,7 @@ import { generateSocraticResponse, calculateCognitiveLevel } from '../services/a
 import { buildLearningCoreContext } from '../services/learningCoreContext.js'
 import { buildResponsibleAIContext, responsibleAIPrompt } from '../services/responsibleAI.js'
 import { logResponsibleAIEvent } from '../services/responsibleAIStore.js'
+import { buildLearningOSPlan, learningOSPrompt, persistLearningOSRun } from '../services/learningOperatingSystem.js'
 import { authMiddleware } from './auth.js'
 
 const router = Router()
@@ -61,7 +62,7 @@ router.post('/study/startSession', async (req, res) => {
 
 router.post('/study/sendMessage', async (req, res) => {
   try {
-    const { sessionId, content, subject } = req.body
+    const { sessionId, content, subject, skill } = req.body
     if (!sessionId || !content) return res.status(400).json({ message: 'Mensagem inválida' })
 
     const todayUsage = await getTodayUsage(req.userId)
@@ -83,7 +84,21 @@ router.post('/study/sendMessage', async (req, res) => {
       history: conversationHistory,
     })
     const responsibleAI = buildResponsibleAIContext(profile, content)
-    const combinedCoreContext = `${learningCoreContext}\n\n${responsibleAIPrompt(responsibleAI)}`
+    const learningOSInput = {
+      userId: req.userId,
+      profile,
+      actor: 'student' as const,
+      intent: 'learn' as const,
+      message: content,
+      subject: subject || 'geral',
+      skill: skill ? String(skill) : undefined,
+      interactionCount: conversationHistory.length,
+      frustration: responsibleAI.intent === 'frustrated',
+      requestedSystemKey: 'socratic_tutor',
+      evidence: { conversationTurns: conversationHistory.length },
+    }
+    const learningOS = await buildLearningOSPlan(learningOSInput)
+    const combinedCoreContext = `${learningCoreContext}\n\n${responsibleAIPrompt(responsibleAI)}\n\n${learningOSPrompt(learningOS)}`
 
     let response: string
     try {
@@ -113,8 +128,9 @@ router.post('/study/sendMessage', async (req, res) => {
       systemKey: 'socratic_tutor',
       action: 'tutor_response',
       context: responsibleAI,
-      metadata: { subject: subject || 'geral', cognitiveLevel, responseLength: response.length },
+      metadata: { subject: subject || 'geral', cognitiveLevel, responseLength: response.length, learningOSIntervention: learningOS.intervention },
     })
+    void persistLearningOSRun(learningOSInput, learningOS).catch(error => console.error('Learning OS persistence error:', error))
 
     res.json({
       response,
@@ -131,6 +147,15 @@ router.post('/study/sendMessage', async (req, res) => {
         confidence: responsibleAI.confidence,
         explanation: responsibleAI.explanation,
         humanReviewAvailable: true,
+      },
+      learningOS: {
+        enabled: true,
+        intervention: learningOS.intervention,
+        confidence: learningOS.confidence,
+        confidenceBand: learningOS.confidenceBand,
+        explanation: learningOS.explanation,
+        safeguards: learningOS.safeguards,
+        nextAction: learningOS.nextAction,
       },
     })
   } catch (error) {
