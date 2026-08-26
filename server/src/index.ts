@@ -13,6 +13,7 @@ import responsibleAIRouter from './routers/responsibleAI.js'
 import learningSafetyRouter from './routers/learningSafety.js'
 import learningGovernanceRouter from './routers/learningGovernance.js'
 import learningOSRouter from './routers/learningOS.js'
+import schoolGovernanceRouter from './routers/schoolGovernance.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -33,6 +34,7 @@ app.use('/api/responsible-ai', responsibleAIRouter)
 app.use('/api/learning-safety', learningSafetyRouter)
 app.use('/api/learning-governance', learningGovernanceRouter)
 app.use('/api/learning-os', learningOSRouter)
+app.use('/api/school-governance', schoolGovernanceRouter)
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Server error:', err)
