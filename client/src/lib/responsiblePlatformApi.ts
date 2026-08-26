@@ -19,6 +19,7 @@ export const platformResponsibleApi={
  institutions:()=>call<{institutions:ManagedInstitution[]}>('/api/institutions/manage'),
  teacherCompetencies:()=>call<{domains:Array<Record<string,unknown>>}>('/api/learning-governance/teacher/competencies'),
  teacherSignals:(institutionId?:string)=>call<{events:Array<Record<string,unknown>>}>(`/api/learning-governance/teacher/signals${institutionId?`?institutionId=${encodeURIComponent(institutionId)}`:''}`),
+ reviewTeacherSignal:(id:string,status:'accepted'|'adjusted'|'dismissed'|'completed',recommendation?:Record<string,unknown>)=>call<{event:Record<string,unknown>}>(`/api/learning-governance/teacher/signals/${encodeURIComponent(id)}`,{method:'PATCH',body:{status,recommendation}}),
  schoolPolicy:(id:string)=>call<{policy:Record<string,unknown>|null}>(`/api/school-governance/${encodeURIComponent(id)}/policy`),
  saveSchoolPolicy:(id:string,body:Record<string,unknown>)=>call<{policy:Record<string,unknown>}>(`/api/school-governance/${encodeURIComponent(id)}/policy`,{method:'PUT',body}),
  readiness:(id:string)=>call<Record<string,unknown>>(`/api/school-governance/${encodeURIComponent(id)}/readiness`),
