@@ -9,6 +9,7 @@ import studyRouter from './routers/study.js'
 import institutionLinksRouter from './routers/institutionLinks.js'
 import institutionAdminRouter from './routers/institutionAdmin.js'
 import enemStateRouter from './routers/enemState.js'
+import responsibleAIRouter from './routers/responsibleAI.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -25,6 +26,7 @@ app.use('/api', studyRouter)
 app.use('/api/institutions', institutionLinksRouter)
 app.use('/api/institutions', institutionAdminRouter)
 app.use('/api/enem', enemStateRouter)
+app.use('/api/responsible-ai', responsibleAIRouter)
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Server error:', err)
