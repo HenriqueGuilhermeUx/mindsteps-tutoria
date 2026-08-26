@@ -7,6 +7,7 @@ export type LiteracyLearning={id:number;title:string;cluster:'computacional'|'di
 export type LiteracyMission={id:string;learningId:number;stage:string;title:string;objective:string;mode:'offline'|'guided_digital'|'project';activity:string;evidence:string}
 export type LearningDecision={id:string;system_key:string;decision_type:string;subject?:string|null;skill?:string|null;confidence:number;explanation:string;human_review_required:boolean;created_at:string;evidence?:Record<string,unknown>}
 export type ManagedInstitution={id:string;name:string;type:string;role:string;city?:string|null;state?:string|null}
+export type HumanOverride={id:string;system_key:string;recommendation_id?:string|null;decision:'accepted'|'adjusted'|'rejected';reason?:string|null;original_payload?:Record<string,unknown>;replacement_payload?:Record<string,unknown>;created_at:string}
 
 export const platformResponsibleApi={
  literacy:()=>call<{stage:string;learnings:LiteracyLearning[];missions:LiteracyMission[];principles:string[];progress:Array<{learning_id:number;mission_id:string;status:string;updated_at?:string}>}>('/api/responsible-ai/literacy'),
@@ -16,6 +17,7 @@ export const platformResponsibleApi={
  runs:(limit=20)=>call<{runs:Array<Record<string,unknown>>}>(`/api/learning-os/runs?limit=${limit}`),
  registry:()=>call<{systems:Array<{key:string;name:string;purpose:string;humanOversight:boolean;riskLevel:string;data:string[];safeguards:string[]}>}>('/api/responsible-ai/registry'),
  override:(body:{systemKey:string;recommendationId?:string;decision:'accepted'|'adjusted'|'rejected';reason?:string})=>call('/api/responsible-ai/overrides',{method:'POST',body}),
+ overrides:(limit=100)=>call<{overrides:HumanOverride[]}>(`/api/responsible-ai/overrides?limit=${limit}`),
  institutions:()=>call<{institutions:ManagedInstitution[]}>('/api/institutions/manage'),
  teacherCompetencies:()=>call<{domains:Array<Record<string,unknown>>}>('/api/learning-governance/teacher/competencies'),
  teacherSignals:(institutionId?:string)=>call<{events:Array<Record<string,unknown>>}>(`/api/learning-governance/teacher/signals${institutionId?`?institutionId=${encodeURIComponent(institutionId)}`:''}`),
