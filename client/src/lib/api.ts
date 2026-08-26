@@ -4,7 +4,7 @@ import type { EnemCloudSnapshot } from '@/stores/enem'
 const API_BASE = import.meta.env.VITE_API_URL || 'https://mindsteps-backend.onrender.com'
 const REQUEST_TIMEOUT_MS = 20000
 
-interface RequestOptions { method?: 'GET' | 'POST' | 'PUT' | 'DELETE'; body?: unknown }
+interface RequestOptions { method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'; body?: unknown }
 
 export interface LearningCoreMetadata { enabled?: boolean; contextPreview?: string[]; learningState?: string; flowZone?: string; learningDNA?: string; teacherInsights?: string[]; familyMessages?: string[]; interventions?: string[] }
 export interface StudentLearningProfileInput { primaryGoal: string; subjects: string[]; learningFormats: string[]; helpPreferences: string[]; challenges: string[]; interests: string[]; dailyMinutes: number; preferredDays: number[]; tutorPersona: string; currentIntention?: string; onboardingCompleted?: boolean }
@@ -39,7 +39,7 @@ export const authApi = {
 }
 export const studyApi = {
   startSession: (tutorId: string) => request<{ sessionId: string }>('/api/study/startSession', { method: 'POST', body: { tutorId } }),
-  sendMessage: (sessionId: string, content: string, subject?: string) => request<{ response: string; xpEarned: number; cognitiveLevel: number; learningCore?: LearningCoreMetadata }>('/api/study/sendMessage', { method: 'POST', body: { sessionId, content, subject } }),
+  sendMessage: (sessionId: string, content: string, subject?: string) => request<{ response: string; xpEarned: number; cognitiveLevel: number; learningCore?: LearningCoreMetadata; responsibleAI?: ResponsibleAIMetadata; learningOS?: LearningOSMetadata }>('/api/study/sendMessage', { method: 'POST', body: { sessionId, content, subject } }),
   getHint: (sessionId: string) => request<{ hint: string }>('/api/study/hint', { method: 'POST', body: { sessionId } }),
   getHistory: (sessionId: string) => request<{ messages: Array<{ role: string; content: string; createdAt: string }> }>(`/api/study/history?sessionId=${sessionId}`),
   endSession: (sessionId: string) => request<{ success: boolean }>('/api/study/endSession', { method: 'POST', body: { sessionId } }),
@@ -80,4 +80,33 @@ export const writingApi = {
   syncProject: (payload: WritingSyncPayload) => request<{ project: WritingRemoteProject; syncedAt: string }>('/api/writing/projects/sync', { method: 'POST', body: payload }),
   removeProject: (clientId: string) => request<{ success: boolean }>(`/api/writing/projects/${encodeURIComponent(clientId)}`, { method: 'DELETE' }),
   effects: () => request<{ effects: Array<{ skill: string; beforeScore: number; afterScore: number; delta: number; createdAt: string }> }>('/api/writing/effects'),
+}
+
+export interface ResponsibleAIMetadata { enabled:boolean; stage:string; assistanceMode:string; confidence:string; explanation:string; humanReviewAvailable:boolean }
+export interface LearningOSMetadata { intervention:string; confidence:number; confidenceBand:string; explanation:string; safeguards:Record<string,unknown>; nextAction:{type:string;label:string;payload?:Record<string,unknown>} }
+export interface AILiteracyLearning { id:number; title:string; domain:string; description?:string }
+export interface AILiteracyMission { id:string; title:string; goal?:string; steps?:string[]; reflection?:string; learningIds?:number[]; minutes?:number }
+export const responsibleAIApi = {
+  policy: (message='') => request<{ policy:unknown; intent:string; confidence:string; explanation:string }>(`/api/responsible-ai/policy?message=${encodeURIComponent(message)}`),
+  registry: () => request<{ systems:Array<{key:string;name:string;purpose:string;riskLevel:string;humanOversight:boolean;data:string[];safeguards:string[]}> }>('/api/responsible-ai/registry'),
+  literacy: () => request<{ learnings:AILiteracyLearning[]; stage?:string; progress:Array<{learning_id:number;status:string;updated_at?:string}> }>('/api/responsible-ai/literacy'),
+  mission: (learningId?:number) => request<{ mission:AILiteracyMission }>(`/api/responsible-ai/literacy/mission${learningId?`?learningId=${learningId}`:''}`),
+  saveProgress: (data:{learningId:number;missionId:string;status:'started'|'completed';evidence?:string;reflection?:string}) => request<unknown>('/api/responsible-ai/literacy/progress',{method:'POST',body:data}),
+  override: (data:{systemKey:string;recommendationId?:string;decision:'accepted'|'adjusted'|'rejected';reason?:string}) => request<unknown>('/api/responsible-ai/overrides',{method:'POST',body:data}),
+}
+
+export interface LearningDecision { id:string; system_key:string; decision_type:string; subject?:string|null; skill?:string|null; confidence:number; explanation:string; human_review_required:boolean; created_at:string; evidence?:Record<string,unknown> }
+export const learningGovernanceApi = {
+  decisions: (limit=30) => request<{decisions:LearningDecision[]}>(`/api/learning-governance/decisions?limit=${limit}`),
+  childRights: () => request<{preferences:Record<string,unknown>}>('/api/learning-governance/child-rights'),
+  competencies: () => request<{domains:Array<{key?:string;title?:string;name?:string;description?:string}>}>('/api/learning-governance/teacher/competencies'),
+  teacherSignals: (institutionId?:string) => request<{events:Array<Record<string,unknown>>}>(`/api/learning-governance/teacher/signals${institutionId?`?institutionId=${encodeURIComponent(institutionId)}`:''}`),
+}
+
+export const learningOSApi = {
+  plan: (data:Record<string,unknown>) => request<{plan:LearningOSMetadata}>('/api/learning-os/plan',{method:'POST',body:data}),
+  runs: (limit=30) => request<{runs:Array<Record<string,unknown>>}>(`/api/learning-os/runs?limit=${limit}`),
+  outcomeSummary: () => request<Record<string,unknown>>('/api/learning-os/outcomes/summary'),
+  institutionPolicy: (institutionId:string) => request<{policy:Record<string,unknown>|null}>(`/api/learning-os/institutions/${encodeURIComponent(institutionId)}/policy`),
+  saveInstitutionPolicy: (institutionId:string,data:Record<string,unknown>) => request<{policy:Record<string,unknown>}>(`/api/learning-os/institutions/${encodeURIComponent(institutionId)}/policy`,{method:'PUT',body:data}),
 }
