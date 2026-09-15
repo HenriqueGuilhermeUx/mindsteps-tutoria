@@ -2,6 +2,7 @@ import {supabase} from '../db/index.js'
 import {getSchoolEntitlements} from './schoolEntitlements.js'
 
 type Role='owner'|'admin'|'coordinator'|'teacher'
+type DirectorStudentProfile={user_id:string;name:string|null;grade:string|null;xp:number|null;level:number|null;streak:number|null;last_study_date:string|null}
 async function manager(userId:string,institutionId:string){const{data,error}=await supabase.from('mindsteps_institution_members').select('role').eq('user_id',userId).eq('institution_id',institutionId).eq('status','active').maybeSingle();if(error||!data)throw new Error('Você não tem acesso a esta instituição');if(!['owner','admin','coordinator'].includes(data.role as Role))throw new Error('Seu perfil não tem acesso ao painel de gestão');return data as{role:Role}}
 const dateKey=(daysAgo:number)=>{const d=new Date();d.setUTCDate(d.getUTCDate()-daysAgo);return d.toISOString().slice(0,10)}
 export async function getDirectorDashboard(userId:string,institutionId:string){
@@ -20,9 +21,10 @@ export async function getDirectorDashboard(userId:string,institutionId:string){
  if(institutionR.error||!institutionR.data)throw new Error('Instituição não encontrada')
  for(const r of [classesR,studentsR,staffR,teachersR,guardiansR,invitesR])if(r.error)throw new Error(r.error.message)
  const students=studentsR.data||[],studentIds=students.map((s:any)=>s.user_id)
- const{data:profiles,error:profileError}=studentIds.length?await supabase.from('student_profiles').select('user_id,name,grade,xp,level,streak,last_study_date').in('user_id',studentIds):{data:[],error:null} as any
+ const{data:profiles,error:profileError}=studentIds.length?await supabase.from('student_profiles').select('user_id,name,grade,xp,level,streak,last_study_date').in('user_id',studentIds):{data:[] as DirectorStudentProfile[],error:null}
  if(profileError)throw new Error(profileError.message)
- const profileMap=new Map((profiles||[]).map((p:any)=>[p.user_id,p]))
+ const typedProfiles=(profiles||[]) as DirectorStudentProfile[]
+ const profileMap=new Map<string,DirectorStudentProfile>(typedProfiles.map(p=>[p.user_id,p]))
  const activeSince=(student:any,since:string)=>{const last=profileMap.get(student.user_id)?.last_study_date;return Boolean(last&&last>=since&&last<=today)}
  const classes=(classesR.data||[]).map((c:any)=>{const enrolled=students.filter((s:any)=>s.class_id===c.id),teacherAssignments=(teachersR.data||[]).filter((t:any)=>t.class_id===c.id);const activeToday=enrolled.filter((s:any)=>profileMap.get(s.user_id)?.last_study_date===today).length,active7d=enrolled.filter((s:any)=>activeSince(s,since7)).length,active30d=enrolled.filter((s:any)=>activeSince(s,since30)).length;return{...c,students:enrolled.length,activeToday,active7d,active30d,active7dRate:enrolled.length?Math.round(active7d/enrolled.length*100):0,active30dRate:enrolled.length?Math.round(active30d/enrolled.length*100):0,teachers:new Set(teacherAssignments.map((t:any)=>t.teacher_user_id)).size,subjects:[...new Set(teacherAssignments.map((t:any)=>t.subject).filter(Boolean))]}})
  const activeToday=students.filter((s:any)=>profileMap.get(s.user_id)?.last_study_date===today).length,active7d=students.filter((s:any)=>activeSince(s,since7)).length,active30d=students.filter((s:any)=>activeSince(s,since30)).length
