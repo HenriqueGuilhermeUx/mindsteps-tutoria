@@ -5,6 +5,7 @@ import {getCommercialReadiness} from '../services/schoolReadiness.js'
 import {getRoster,moveStudent,setStudentEnrollment} from '../services/schoolRoster.js'
 import {changeStaffRole,listStaff,setStaffStatus} from '../services/schoolStaff.js'
 import {getGuardianStudents} from '../services/guardianPortal.js'
+import {assignTeacher,getTeacherRoster,listTeachingScope,setTeacherAssignmentStatus} from '../services/schoolTeachingScope.js'
 const router=Router()
 router.use(authMiddleware)
 const fail=(res:any,error:unknown,status=400)=>res.status(status).json({message:error instanceof Error?error.message:'Não foi possível concluir a operação'})
@@ -22,6 +23,10 @@ router.put('/:institutionId/students/:studentUserId/enrollment',async(req,res)=>
 router.get('/:institutionId/staff',async(req,res)=>{try{res.json(await listStaff(req.userId,req.params.institutionId,typeof req.query.status==='string'?req.query.status:undefined))}catch(e){fail(res,e,403)}})
 router.put('/:institutionId/staff/:staffUserId/role',async(req,res)=>{try{res.json({member:await changeStaffRole(req.userId,req.params.institutionId,req.params.staffUserId,req.body?.role)})}catch(e){fail(res,e)}})
 router.put('/:institutionId/staff/:staffUserId/status',async(req,res)=>{try{const status=req.body?.status;if(status!=='active'&&status!=='inactive')return fail(res,new Error('Status inválido'));res.json({member:await setStaffStatus(req.userId,req.params.institutionId,req.params.staffUserId,status)})}catch(e){fail(res,e)}})
+router.get('/:institutionId/teaching-scope',async(req,res)=>{try{res.json(await listTeachingScope(req.userId,req.params.institutionId))}catch(e){fail(res,e,403)}})
+router.post('/:institutionId/teaching-scope',async(req,res)=>{try{res.json({assignment:await assignTeacher(req.userId,req.params.institutionId,req.body)})}catch(e){fail(res,e)}})
+router.put('/:institutionId/teaching-scope/:assignmentId/status',async(req,res)=>{try{const status=req.body?.status;if(status!=='active'&&status!=='inactive')return fail(res,new Error('Status inválido'));res.json({assignment:await setTeacherAssignmentStatus(req.userId,req.params.institutionId,req.params.assignmentId,status)})}catch(e){fail(res,e)}})
+router.get('/:institutionId/classes/:classId/roster',async(req,res)=>{try{res.json(await getTeacherRoster(req.userId,req.params.institutionId,req.params.classId))}catch(e){fail(res,e,403)}})
 router.get('/:institutionId/invites',async(req,res)=>{try{res.json({invites:await listSchoolInvites(req.userId,req.params.institutionId)})}catch(e){fail(res,e,403)}})
 router.post('/:institutionId/invites',async(req,res)=>{try{res.json({invite:await createSchoolInvite(req.userId,req.params.institutionId,req.body)})}catch(e){fail(res,e)}})
 router.post('/:institutionId/import',async(req,res)=>{try{res.json(await bulkCreateInvites(req.userId,req.params.institutionId,req.body?.rows))}catch(e){fail(res,e)}})
