@@ -3,6 +3,7 @@ import {authMiddleware} from './auth.js'
 import {acceptSchoolInvite,bulkCreateInvites,configureSchool,createClass,createSchoolInvite,getSchoolSetup,listAudit,listClasses,listGuardians,listSchoolInvites} from '../services/schoolCommercial.js'
 import {getCommercialReadiness} from '../services/schoolReadiness.js'
 import {getRoster,moveStudent,setStudentEnrollment} from '../services/schoolRoster.js'
+import {changeStaffRole,listStaff,setStaffStatus} from '../services/schoolStaff.js'
 const router=Router()
 router.use(authMiddleware)
 const fail=(res:any,error:unknown,status=400)=>res.status(status).json({message:error instanceof Error?error.message:'Não foi possível concluir a operação'})
@@ -16,6 +17,9 @@ router.post('/:institutionId/classes',async(req,res)=>{try{res.json({class:await
 router.get('/:institutionId/students',async(req,res)=>{try{res.json(await getRoster(req.userId,req.params.institutionId,String(req.query.status||'active')))}catch(e){fail(res,e,403)}})
 router.put('/:institutionId/students/:studentUserId/class',async(req,res)=>{try{res.json({student:await moveStudent(req.userId,req.params.institutionId,req.params.studentUserId,req.body?.classId||null)})}catch(e){fail(res,e)}})
 router.put('/:institutionId/students/:studentUserId/enrollment',async(req,res)=>{try{const status=req.body?.status;if(status!=='active'&&status!=='inactive')return fail(res,new Error('Status inválido'));res.json({student:await setStudentEnrollment(req.userId,req.params.institutionId,req.params.studentUserId,status)})}catch(e){fail(res,e)}})
+router.get('/:institutionId/staff',async(req,res)=>{try{res.json(await listStaff(req.userId,req.params.institutionId,typeof req.query.status==='string'?req.query.status:undefined))}catch(e){fail(res,e,403)}})
+router.put('/:institutionId/staff/:staffUserId/role',async(req,res)=>{try{res.json({member:await changeStaffRole(req.userId,req.params.institutionId,req.params.staffUserId,req.body?.role)})}catch(e){fail(res,e)}})
+router.put('/:institutionId/staff/:staffUserId/status',async(req,res)=>{try{const status=req.body?.status;if(status!=='active'&&status!=='inactive')return fail(res,new Error('Status inválido'));res.json({member:await setStaffStatus(req.userId,req.params.institutionId,req.params.staffUserId,status)})}catch(e){fail(res,e)}})
 router.get('/:institutionId/invites',async(req,res)=>{try{res.json({invites:await listSchoolInvites(req.userId,req.params.institutionId)})}catch(e){fail(res,e,403)}})
 router.post('/:institutionId/invites',async(req,res)=>{try{res.json({invite:await createSchoolInvite(req.userId,req.params.institutionId,req.body)})}catch(e){fail(res,e)}})
 router.post('/:institutionId/import',async(req,res)=>{try{res.json(await bulkCreateInvites(req.userId,req.params.institutionId,req.body?.rows))}catch(e){fail(res,e)}})
