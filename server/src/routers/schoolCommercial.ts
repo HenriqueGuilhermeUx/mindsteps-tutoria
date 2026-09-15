@@ -8,10 +8,9 @@ import {getGuardianStudents} from '../services/guardianPortal.js'
 import {assignTeacher,getTeacherRoster,listTeachingScope,setTeacherAssignmentStatus} from '../services/schoolTeachingScope.js'
 import {getDirectorDashboard} from '../services/schoolDirector.js'
 import {executeSchoolProvisioning,planSchoolProvisioning} from '../services/schoolProvisioning.js'
-const router=Router()
-router.use(authMiddleware)
+const router=Router();router.use(authMiddleware)
 const fail=(res:any,error:unknown,status=400)=>res.status(status).json({message:error instanceof Error?error.message:'Não foi possível concluir a operação'})
-router.post('/invites/accept',async(req,res)=>{try{res.json(await acceptSchoolInvite(req.userId,String(req.body?.token||'')))}catch(e){fail(res,e)}})
+router.post('/invites/accept',async(req:any,res)=>{try{res.json(await acceptSchoolInvite(req.userId,req.userEmail,String(req.body?.token||'')))}catch(e){fail(res,e)}})
 router.get('/guardian/me/students',async(req,res)=>{try{res.json(await getGuardianStudents(req.userId))}catch(e){fail(res,e,403)}})
 router.get('/:institutionId/setup',async(req,res)=>{try{res.json(await getSchoolSetup(req.userId,req.params.institutionId))}catch(e){fail(res,e,403)}})
 router.put('/:institutionId/setup',async(req,res)=>{try{res.json({institution:await configureSchool(req.userId,req.params.institutionId,req.body||{})})}catch(e){fail(res,e)}})
