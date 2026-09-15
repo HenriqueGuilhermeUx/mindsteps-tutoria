@@ -7,16 +7,17 @@ import {changeStaffRole,listStaff,setStaffStatus} from '../services/schoolStaff.
 import {getGuardianStudents} from '../services/guardianPortal.js'
 import {assignTeacher,getTeacherRoster,listTeachingScope,setTeacherAssignmentStatus} from '../services/schoolTeachingScope.js'
 import {getDirectorDashboard} from '../services/schoolDirector.js'
+import {planSchoolProvisioning} from '../services/schoolProvisioning.js'
 const router=Router()
 router.use(authMiddleware)
 const fail=(res:any,error:unknown,status=400)=>res.status(status).json({message:error instanceof Error?error.message:'Não foi possível concluir a operação'})
-
 router.post('/invites/accept',async(req,res)=>{try{res.json(await acceptSchoolInvite(req.userId,String(req.body?.token||'')))}catch(e){fail(res,e)}})
 router.get('/guardian/me/students',async(req,res)=>{try{res.json(await getGuardianStudents(req.userId))}catch(e){fail(res,e,403)}})
 router.get('/:institutionId/setup',async(req,res)=>{try{res.json(await getSchoolSetup(req.userId,req.params.institutionId))}catch(e){fail(res,e,403)}})
 router.put('/:institutionId/setup',async(req,res)=>{try{res.json({institution:await configureSchool(req.userId,req.params.institutionId,req.body||{})})}catch(e){fail(res,e)}})
 router.get('/:institutionId/readiness',async(req,res)=>{try{res.json(await getCommercialReadiness(req.userId,req.params.institutionId))}catch(e){fail(res,e,403)}})
 router.get('/:institutionId/dashboard',async(req,res)=>{try{res.json(await getDirectorDashboard(req.userId,req.params.institutionId))}catch(e){fail(res,e,403)}})
+router.post('/:institutionId/provisioning/validate',async(req,res)=>{try{res.json(await planSchoolProvisioning(req.userId,req.params.institutionId,req.body?.rows))}catch(e){fail(res,e)}})
 router.get('/:institutionId/classes',async(req,res)=>{try{res.json({classes:await listClasses(req.userId,req.params.institutionId)})}catch(e){fail(res,e,403)}})
 router.post('/:institutionId/classes',async(req,res)=>{try{res.json({class:await createClass(req.userId,req.params.institutionId,req.body||{})})}catch(e){fail(res,e)}})
 router.get('/:institutionId/students',async(req,res)=>{try{res.json(await getRoster(req.userId,req.params.institutionId,String(req.query.status||'active')))}catch(e){fail(res,e,403)}})
