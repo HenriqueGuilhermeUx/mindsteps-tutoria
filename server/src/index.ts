@@ -14,12 +14,13 @@ import learningSafetyRouter from './routers/learningSafety.js'
 import learningGovernanceRouter from './routers/learningGovernance.js'
 import learningOSRouter from './routers/learningOS.js'
 import schoolGovernanceRouter from './routers/schoolGovernance.js'
+import schoolCommercialRouter from './routers/schoolCommercial.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
 
 app.use(cors())
-app.use(express.json({ limit: '1mb' }))
+app.use(express.json({ limit: '2mb' }))
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
@@ -35,6 +36,7 @@ app.use('/api/learning-safety', learningSafetyRouter)
 app.use('/api/learning-governance', learningGovernanceRouter)
 app.use('/api/learning-os', learningOSRouter)
 app.use('/api/school-governance', schoolGovernanceRouter)
+app.use('/api/school-commercial', schoolCommercialRouter)
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Server error:', err)
