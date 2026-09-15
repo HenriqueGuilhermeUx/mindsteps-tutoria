@@ -28,6 +28,14 @@ jobs:
         working-directory: client
         run: npm run typecheck
 
+      - name: Install backend dependencies
+        working-directory: server
+        run: npm install --no-audit --no-fund
+
+      - name: Validate backend build
+        working-directory: server
+        run: npm run build
+
       - name: Build public ENEM V2 release
         working-directory: client
         env:
@@ -53,6 +61,8 @@ jobs:
 
       - name: Release gate summary
         run: |
+          echo "Frontend TypeScript: validated"
+          echo "Backend TypeScript: validated"
           echo "Public build: ENEM V2 enabled"
           echo "Emergency rollback mode: ENEM V2 can be disabled by environment flag"
           echo "Package: br.com.alternativeventures.mindsteps"
