@@ -9,6 +9,7 @@ import {assignTeacher,getTeacherRoster,listTeachingScope,setTeacherAssignmentSta
 import {getDirectorDashboard} from '../services/schoolDirector.js'
 import {executeSchoolProvisioning,planSchoolProvisioning} from '../services/schoolProvisioning.js'
 import {expireStaleInvites,resendInvite,revokeInvite} from '../services/schoolInviteLifecycle.js'
+import {archiveSchoolClass,reactivateSchoolClass,updateSchoolClass} from '../services/schoolClassLifecycle.js'
 const router=Router();router.use(authMiddleware)
 const fail=(res:any,error:unknown,status=400)=>res.status(status).json({message:error instanceof Error?error.message:'Não foi possível concluir a operação'})
 router.post('/invites/accept',async(req:any,res)=>{try{res.json(await acceptSchoolInvite(req.userId,req.userEmail,String(req.body?.token||'')))}catch(e){fail(res,e)}})
@@ -21,6 +22,9 @@ router.post('/:institutionId/provisioning/validate',async(req,res)=>{try{res.jso
 router.post('/:institutionId/provisioning/execute',async(req,res)=>{try{res.json(await executeSchoolProvisioning(req.userId,req.params.institutionId,req.body?.rows))}catch(e){fail(res,e)}})
 router.get('/:institutionId/classes',async(req,res)=>{try{res.json({classes:await listClasses(req.userId,req.params.institutionId)})}catch(e){fail(res,e,403)}})
 router.post('/:institutionId/classes',async(req,res)=>{try{res.json({class:await createClass(req.userId,req.params.institutionId,req.body||{})})}catch(e){fail(res,e)}})
+router.put('/:institutionId/classes/:classId',async(req,res)=>{try{res.json({class:await updateSchoolClass(req.userId,req.params.institutionId,req.params.classId,req.body||{})})}catch(e){fail(res,e)}})
+router.put('/:institutionId/classes/:classId/archive',async(req,res)=>{try{res.json({class:await archiveSchoolClass(req.userId,req.params.institutionId,req.params.classId)})}catch(e){fail(res,e)}})
+router.put('/:institutionId/classes/:classId/reactivate',async(req,res)=>{try{res.json({class:await reactivateSchoolClass(req.userId,req.params.institutionId,req.params.classId)})}catch(e){fail(res,e)}})
 router.get('/:institutionId/students',async(req,res)=>{try{res.json(await getRoster(req.userId,req.params.institutionId,String(req.query.status||'active')))}catch(e){fail(res,e,403)}})
 router.put('/:institutionId/students/:studentUserId/class',async(req,res)=>{try{res.json({student:await moveStudent(req.userId,req.params.institutionId,req.params.studentUserId,req.body?.classId||null)})}catch(e){fail(res,e)}})
 router.put('/:institutionId/students/:studentUserId/enrollment',async(req,res)=>{try{const status=req.body?.status;if(status!=='active'&&status!=='inactive')return fail(res,new Error('Status inválido'));res.json({student:await setStudentEnrollment(req.userId,req.params.institutionId,req.params.studentUserId,status)})}catch(e){fail(res,e)}})
