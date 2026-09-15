@@ -4,7 +4,7 @@ import {acceptSchoolInvite,bulkCreateInvites,configureSchool,createClass,createS
 import {getCommercialReadiness} from '../services/schoolReadiness.js'
 import {getRoster,moveStudent,setStudentEnrollment} from '../services/schoolRoster.js'
 import {changeStaffRole,listStaff,setStaffStatus} from '../services/schoolStaff.js'
-import {getGuardianStudents} from '../services/guardianPortal.js'
+import {getGuardianStudentLearningOverview,getGuardianStudents} from '../services/guardianPortal.js'
 import {assignTeacher,getTeacherRoster,listTeachingScope,setTeacherAssignmentStatus} from '../services/schoolTeachingScope.js'
 import {getDirectorDashboard} from '../services/schoolDirector.js'
 import {executeSchoolProvisioning,planSchoolProvisioning} from '../services/schoolProvisioning.js'
@@ -14,6 +14,7 @@ const router=Router();router.use(authMiddleware)
 const fail=(res:any,error:unknown,status=400)=>res.status(status).json({message:error instanceof Error?error.message:'Não foi possível concluir a operação'})
 router.post('/invites/accept',async(req:any,res)=>{try{res.json(await acceptSchoolInvite(req.userId,req.userEmail,String(req.body?.token||'')))}catch(e){fail(res,e)}})
 router.get('/guardian/me/students',async(req,res)=>{try{res.json(await getGuardianStudents(req.userId))}catch(e){fail(res,e,403)}})
+router.get('/guardian/me/students/:studentUserId/learning',async(req,res)=>{try{res.json(await getGuardianStudentLearningOverview(req.userId,req.params.studentUserId,typeof req.query.institutionId==='string'?req.query.institutionId:undefined))}catch(e){fail(res,e,403)}})
 router.get('/:institutionId/setup',async(req,res)=>{try{res.json(await getSchoolSetup(req.userId,req.params.institutionId))}catch(e){fail(res,e,403)}})
 router.put('/:institutionId/setup',async(req,res)=>{try{res.json({institution:await configureSchool(req.userId,req.params.institutionId,req.body||{})})}catch(e){fail(res,e)}})
 router.get('/:institutionId/readiness',async(req,res)=>{try{res.json(await getCommercialReadiness(req.userId,req.params.institutionId))}catch(e){fail(res,e,403)}})
