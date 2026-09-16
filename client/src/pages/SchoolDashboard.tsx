@@ -1,94 +1,31 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
-import { BarChart3, Building2, CheckCircle2, Copy, GraduationCap, KeyRound, Loader2, Plus, RefreshCw, Users } from 'lucide-react'
-import { institutionAdminApi, type InstitutionOverview, type ManagedInstitution } from '@/lib/api'
+import { Activity, AlertTriangle, ArrowRight, Building2, CheckCircle2, CircleGauge, GraduationCap, Loader2, RefreshCw, ShieldCheck, Users } from 'lucide-react'
+import { institutionAdminApi, schoolCommercialApi, type ManagedInstitution, type SchoolDirectorDashboard, type SchoolReadiness } from '@/lib/api'
 import { useAuthStore } from '@/stores'
 
-export function SchoolDashboardPage() {
-  const { isAuthenticated } = useAuthStore()
-  const [institutions, setInstitutions] = useState<ManagedInstitution[]>([])
-  const [selectedId, setSelectedId] = useState('')
-  const [overview, setOverview] = useState<InstitutionOverview | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [busy, setBusy] = useState(false)
-  const [name, setName] = useState('')
-  const [city, setCity] = useState('')
-  const [state, setState] = useState('')
-
-  const loadInstitutions = async () => {
-    if (!isAuthenticated) { setLoading(false); return }
-    setLoading(true)
-    try {
-      const data = await institutionAdminApi.list()
-      setInstitutions(data.institutions)
-      const next = selectedId || data.institutions[0]?.id || ''
-      setSelectedId(next)
-      if (next) setOverview(await institutionAdminApi.overview(next))
-      else setOverview(null)
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Não foi possível carregar a escola')
-    } finally { setLoading(false) }
-  }
-
-  useEffect(() => { void loadInstitutions() }, [isAuthenticated])
-
-  const selectInstitution = async (id: string) => {
-    setSelectedId(id); setBusy(true)
-    try { setOverview(await institutionAdminApi.overview(id)) }
-    catch (error) { toast.error(error instanceof Error ? error.message : 'Não foi possível abrir a instituição') }
-    finally { setBusy(false) }
-  }
-
-  const createInstitution = async () => {
-    if (name.trim().length < 2) { toast.error('Informe o nome da instituição'); return }
-    setBusy(true)
-    try {
-      const { institution } = await institutionAdminApi.create({ name, city, state, type: 'school' })
-      setName(''); setCity(''); setState('')
-      const next = [institution, ...institutions]
-      setInstitutions(next); setSelectedId(institution.id)
-      setOverview(await institutionAdminApi.overview(institution.id))
-      toast.success('Instituição criada')
-    } catch (error) { toast.error(error instanceof Error ? error.message : 'Não foi possível criar a instituição') }
-    finally { setBusy(false) }
-  }
-
-  const createInvite = async () => {
-    if (!selectedId) return
-    setBusy(true)
-    try {
-      const { invite } = await institutionAdminApi.createInvite(selectedId, { label: 'Entrada de estudantes' })
-      await navigator.clipboard?.writeText(invite.code).catch(() => undefined)
-      setOverview(await institutionAdminApi.overview(selectedId))
-      toast.success(`Código ${invite.code} criado e copiado`)
-    } catch (error) { toast.error(error instanceof Error ? error.message : 'Não foi possível criar o convite') }
-    finally { setBusy(false) }
-  }
-
-  if (!isAuthenticated) return <main className="flex-1 bg-slate-50"><section className="mx-auto max-w-3xl px-4 py-20 text-center"><Building2 className="mx-auto h-12 w-12 text-primary-600"/><h1 className="mt-5 text-3xl font-black text-slate-950">Gestão escolar MindSteps</h1><p className="mt-3 text-slate-600">Entre com uma conta autorizada para criar ou administrar uma escola, turma ou programa.</p><Link to="/auth" className="mt-6 inline-flex rounded-xl bg-primary-600 px-6 py-3 font-bold text-white">Entrar</Link></section></main>
-  if (loading) return <main className="flex min-h-[55vh] flex-1 items-center justify-center bg-slate-50"><Loader2 className="h-8 w-8 animate-spin text-primary-600"/></main>
-
-  if (!institutions.length) return <main className="flex-1 bg-slate-50"><section className="mx-auto max-w-3xl px-4 py-12"><div className="rounded-3xl bg-gradient-to-br from-slate-950 to-primary-900 p-8 text-white"><p className="text-xs font-black uppercase tracking-[.18em] text-primary-200">Primeira configuração</p><h1 className="mt-3 text-3xl font-black">Crie sua instituição.</h1><p className="mt-3 text-slate-300">Sua conta vira proprietária da instituição e depois poderá gerar códigos para conectar estudantes existentes.</p></div><div className="mt-6 rounded-3xl bg-white p-6 shadow-sm"><div className="grid gap-3 sm:grid-cols-2"><input value={name} onChange={e=>setName(e.target.value)} placeholder="Nome da escola" className="rounded-xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-primary-200 sm:col-span-2"/><input value={city} onChange={e=>setCity(e.target.value)} placeholder="Cidade" className="rounded-xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-primary-200"/><input value={state} onChange={e=>setState(e.target.value)} placeholder="UF" maxLength={2} className="rounded-xl border border-slate-200 px-4 py-3 uppercase outline-none focus:ring-2 focus:ring-primary-200"/></div><button disabled={busy} onClick={createInstitution} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 py-3.5 font-black text-white disabled:opacity-50">{busy?<Loader2 className="h-4 w-4 animate-spin"/>:<Plus className="h-4 w-4"/>} Criar instituição</button></div></section></main>
-
-  const metrics = overview?.metrics
-  return <main className="flex-1 bg-slate-50">
-    <section className="bg-gradient-to-br from-slate-950 via-primary-900 to-secondary-900 text-white"><div className="mx-auto max-w-6xl px-4 py-10 sm:px-6"><div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between"><div><p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm"><Building2 className="h-4 w-4"/> School Intelligence</p><h1 className="mt-4 text-4xl font-black">{overview?.institution.name || 'Sua instituição'}</h1><p className="mt-2 text-slate-300">Dados reais de vínculo, atividade e evolução. Sem reduzir aprendizagem a uma nota única.</p></div><div className="flex flex-wrap gap-2">{institutions.map(item=><button key={item.id} onClick={()=>void selectInstitution(item.id)} className={`rounded-xl px-4 py-2 text-sm font-bold ${item.id===selectedId?'bg-white text-primary-800':'bg-white/10 text-white'}`}>{item.name}</button>)}</div></div></div></section>
-
-    <section className="mx-auto grid max-w-6xl gap-4 px-4 py-7 sm:grid-cols-2 sm:px-6 lg:grid-cols-5">
-      <Metric label="Alunos conectados" value={metrics?.students ?? 0} icon={<Users className="h-5 w-5"/>}/>
-      <Metric label="Ativos hoje" value={metrics?.activeToday ?? 0} icon={<CheckCircle2 className="h-5 w-5"/>}/>
-      <Metric label="XP médio" value={metrics?.avgXp ?? 0} icon={<BarChart3 className="h-5 w-5"/>}/>
-      <Metric label="Sequência média" value={`${metrics?.avgStreak ?? 0}d`} icon={<RefreshCw className="h-5 w-5"/>}/>
-      <Metric label="Convites ativos" value={metrics?.activeInvites ?? 0} icon={<KeyRound className="h-5 w-5"/>}/>
-    </section>
-
-    <section className="mx-auto grid max-w-6xl gap-6 px-4 pb-10 sm:px-6 lg:grid-cols-[1.2fr_.8fr]">
-      <div className="overflow-hidden rounded-3xl bg-white shadow-sm"><div className="flex items-center justify-between border-b border-slate-100 p-5"><div><p className="text-xs font-black uppercase tracking-wider text-primary-600">Estudantes</p><h2 className="text-xl font-black text-slate-950">Quem já está conectado</h2></div>{busy&&<Loader2 className="h-5 w-5 animate-spin text-primary-600"/>}</div>{overview?.students.length?<div className="divide-y divide-slate-100">{overview.students.map(student=><div key={student.id} className="flex items-center justify-between gap-4 p-5"><div><p className="font-black text-slate-900">{student.name || 'Estudante'}</p><p className="mt-1 text-xs text-slate-500">{student.grade ? `${student.grade}º ano · ` : ''}entrou {new Date(student.joinedAt).toLocaleDateString('pt-BR')}</p></div><div className="flex gap-2 text-center"><span className="rounded-xl bg-primary-50 px-3 py-2 text-xs font-black text-primary-700">{student.xp || 0} XP</span><span className="rounded-xl bg-orange-50 px-3 py-2 text-xs font-black text-orange-700">🔥 {student.streak || 0}</span></div></div>)}</div>:<div className="p-8 text-center text-slate-500">Ainda não há estudantes conectados. Gere o primeiro código de convite.</div>}</div>
-
-      <aside className="space-y-5"><div className="rounded-3xl bg-slate-950 p-6 text-white"><div className="flex items-center gap-2 text-primary-300"><GraduationCap className="h-5 w-5"/><span className="text-xs font-black uppercase tracking-wider">Entrada de estudantes</span></div><h2 className="mt-3 text-xl font-black">Um código. A mesma identidade.</h2><p className="mt-2 text-sm leading-6 text-slate-400">O aluno usa o código em “Meus vínculos”. A conta, o histórico e o mapa continuam sendo dele.</p><button disabled={busy} onClick={createInvite} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3.5 font-black text-slate-950 disabled:opacity-50"><Plus className="h-4 w-4"/> Gerar código</button></div><div className="rounded-3xl bg-white p-6 shadow-sm"><p className="text-xs font-black uppercase tracking-wider text-slate-400">Códigos recentes</p><div className="mt-3 space-y-2">{overview?.invites.slice(0,4).map(invite=><button key={invite.code} onClick={()=>{void navigator.clipboard?.writeText(invite.code);toast.success('Código copiado')}} className="flex w-full items-center justify-between rounded-2xl bg-slate-50 p-3 text-left"><div><p className="font-black text-slate-900">{invite.code}</p><p className="text-xs text-slate-500">{invite.label || 'Convite'} · {invite.uses_count || 0} usos</p></div><Copy className="h-4 w-4 text-slate-400"/></button>)}{!overview?.invites.length&&<p className="text-sm text-slate-500">Nenhum código ainda.</p>}</div></div></aside>
-    </section>
-  </main>
+export function SchoolDashboardPage(){
+ const{isAuthenticated}=useAuthStore();const[institutions,setInstitutions]=useState<ManagedInstitution[]>([]);const[selectedId,setSelectedId]=useState('');const[dashboard,setDashboard]=useState<SchoolDirectorDashboard|null>(null);const[readiness,setReadiness]=useState<SchoolReadiness|null>(null);const[loading,setLoading]=useState(true);const[busy,setBusy]=useState(false)
+ const open=async(id:string)=>{setBusy(true);try{const[d,r]=await Promise.all([schoolCommercialApi.dashboard(id),schoolCommercialApi.readiness(id)]);setDashboard(d);setReadiness(r);setSelectedId(id)}catch(e){toast.error(e instanceof Error?e.message:'Não foi possível abrir a operação escolar')}finally{setBusy(false)}}
+ const load=async()=>{if(!isAuthenticated){setLoading(false);return}setLoading(true);try{const data=await institutionAdminApi.list();setInstitutions(data.institutions);const id=selectedId||data.institutions[0]?.id||'';if(id)await open(id)}catch(e){toast.error(e instanceof Error?e.message:'Não foi possível carregar a escola')}finally{setLoading(false)}}
+ useEffect(()=>{void load()},[isAuthenticated])
+ if(!isAuthenticated)return <main className="flex-1 bg-slate-50"><section className="mx-auto max-w-3xl px-4 py-20 text-center"><Building2 className="mx-auto h-12 w-12 text-primary-600"/><h1 className="mt-5 text-3xl font-black text-slate-950">MindSteps para Escolas</h1><p className="mt-3 text-slate-600">Entre com uma conta institucional para acompanhar implantação, aprendizagem e operação.</p><Link to="/auth" className="mt-6 inline-flex rounded-xl bg-primary-600 px-6 py-3 font-bold text-white">Entrar</Link></section></main>
+ if(loading)return <main className="flex min-h-[55vh] flex-1 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary-600"/></main>
+ if(!institutions.length)return <main className="flex-1 bg-slate-50"><section className="mx-auto max-w-4xl px-4 py-16"><div className="rounded-[2rem] bg-slate-950 p-8 text-white"><p className="text-xs font-black uppercase tracking-[.18em] text-primary-300">MindSteps para Escolas</p><h1 className="mt-3 text-4xl font-black">Sua operação escolar começa aqui.</h1><p className="mt-4 max-w-2xl text-slate-300">A criação e ativação comercial da primeira instituição é feita no onboarding assistido MindSteps. Depois disso, direção e coordenação acompanham toda a implantação por este centro.</p></div></section></main>
+ const m=dashboard?.metrics,a=dashboard?.attention,go=readiness?.pilotGate.status==='GO'
+ return <main className="flex-1 bg-slate-50">
+  <section className="bg-gradient-to-br from-slate-950 via-primary-950 to-primary-800 text-white"><div className="mx-auto max-w-7xl px-4 py-10 sm:px-6"><div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between"><div><div className="flex flex-wrap items-center gap-2"><span className="rounded-full bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-wider">Centro de Operações</span><span className={`rounded-full px-3 py-1 text-xs font-black ${go?'bg-emerald-400/20 text-emerald-200':'bg-amber-400/20 text-amber-200'}`}>{go?'GO para operação':'Implantação em andamento'}</span></div><h1 className="mt-4 text-4xl font-black">{dashboard?.institution.name||'MindSteps para Escolas'}</h1><p className="mt-2 max-w-2xl text-slate-300">Visão executiva da implantação, participação e capacidade da escola — sem transformar aprendizagem em uma nota única.</p></div><div className="flex flex-wrap gap-2">{institutions.map(i=><button key={i.id} onClick={()=>void open(i.id)} className={`rounded-xl px-4 py-2 text-sm font-bold ${i.id===selectedId?'bg-white text-primary-900':'bg-white/10'}`}>{i.name}</button>)}<button onClick={()=>void open(selectedId)} disabled={busy} className="rounded-xl bg-white/10 p-2.5"><RefreshCw className={`h-4 w-4 ${busy?'animate-spin':''}`}/></button></div></div></div></section>
+  <section className="mx-auto max-w-7xl px-4 py-7 sm:px-6">
+   <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6"><Metric label="Alunos ativos" value={m?.students||0} icon={<Users/>}/><Metric label="Ativos hoje" value={`${m?.activeTodayRate||0}%`} sub={`${m?.activeToday||0} alunos`} icon={<Activity/>}/><Metric label="Ativos 7 dias" value={`${m?.active7dRate||0}%`} sub={`${m?.active7d||0} alunos`} icon={<CircleGauge/>}/><Metric label="Professores" value={m?.teachers||0} sub={`${m?.classes||0} turmas`} icon={<GraduationCap/>}/><Metric label="Responsáveis" value={`${m?.guardianCoverage||0}%`} sub="cobertura" icon={<ShieldCheck/>}/><Metric label="Seats" value={`${m?.students||0}/${dashboard?.license.seatLimit||0}`} sub={`${m?.seatsAvailable||0} disponíveis`} icon={<Users/>}/></div>
+   <div className="mt-6 grid gap-6 xl:grid-cols-[1.15fr_.85fr]">
+    <section className="rounded-3xl bg-white p-6 shadow-sm"><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-wider text-primary-600">Prontidão comercial</p><h2 className="mt-1 text-2xl font-black text-slate-950">{go?'Escola pronta para operar':'Finalize a implantação'}</h2></div><div className={`rounded-2xl px-4 py-3 text-center ${go?'bg-emerald-50 text-emerald-700':'bg-amber-50 text-amber-700'}`}><p className="text-2xl font-black">{readiness?.score||0}%</p><p className="text-[10px] font-black uppercase">readiness</p></div></div><div className="mt-5 grid gap-3 sm:grid-cols-2">{readiness?.checks.map(c=><div key={c.key} className={`flex gap-3 rounded-2xl border p-4 ${c.ok?'border-emerald-100 bg-emerald-50/50':'border-amber-100 bg-amber-50/50'}`}>{c.ok?<CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600"/>:<AlertTriangle className="h-5 w-5 shrink-0 text-amber-600"/>}<div><p className="text-sm font-black text-slate-900">{c.label}</p><p className="mt-1 text-xs text-slate-500">{c.ok?'Concluído':c.severity==='blocking'?'Necessário para GO':'Recomendado'}</p></div></div>)}</div></section>
+    <aside className="space-y-5"><div className="rounded-3xl bg-slate-950 p-6 text-white"><p className="text-xs font-black uppercase tracking-wider text-primary-300">Licença</p><div className="mt-3 flex items-end justify-between"><div><p className="text-2xl font-black">{dashboard?.license.planCode||'pilot'}</p><p className="text-sm text-slate-400">{dashboard?.license.status||'—'} · {dashboard?.license.licensed?'ativa':'requer atenção'}</p></div><span className="rounded-xl bg-white/10 px-3 py-2 text-sm font-black">{m?.seatUsage||0}% utilizado</span></div><div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-white" style={{width:`${Math.min(100,m?.seatUsage||0)}%`}}/></div></div><Attention attention={a}/></aside>
+   </div>
+   <section className="mt-6 rounded-3xl bg-white p-6 shadow-sm"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-xs font-black uppercase tracking-wider text-primary-600">Operação acadêmica</p><h2 className="text-2xl font-black text-slate-950">Turmas e participação</h2></div><p className="text-sm text-slate-500">{m?.staff||0} pessoas na equipe · {m?.pendingInvites||0} convites pendentes</p></div><div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">{dashboard?.classes?.length?dashboard.classes.map((c:any,i)=><div key={String(c.id||i)} className="rounded-2xl border border-slate-100 p-5"><div className="flex items-center justify-between"><p className="font-black text-slate-900">{String(c.name||'Turma')}</p><span className="rounded-lg bg-slate-100 px-2 py-1 text-xs font-bold text-slate-600">{Number(c.students||0)} alunos</span></div><div className="mt-4 grid grid-cols-3 gap-2 text-center"><Mini label="Hoje" value={`${Number(c.activeTodayRate||0)}%`}/><Mini label="7 dias" value={`${Number(c.active7dRate||0)}%`}/><Mini label="Prof." value={Number(c.teachers||0)}/></div></div>):<div className="col-span-full rounded-2xl bg-slate-50 p-8 text-center text-slate-500">As turmas aparecerão aqui após o onboarding.</div>}</div></section>
+  </section>
+ </main>
 }
-
-function Metric({label,value,icon}:{label:string;value:string|number;icon:React.ReactNode}){return <div className="rounded-3xl bg-white p-5 shadow-sm"><div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-50 text-primary-700">{icon}</div><p className="text-sm text-slate-500">{label}</p><p className="mt-1 text-3xl font-black text-slate-950">{value}</p></div>}
+function Metric({label,value,sub,icon}:{label:string;value:string|number;sub?:string;icon:React.ReactNode}){return <div className="rounded-3xl bg-white p-5 shadow-sm"><div className="mb-4 flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-50 text-primary-700">{icon}</div><p className="text-sm text-slate-500">{label}</p><p className="mt-1 text-3xl font-black text-slate-950">{value}</p>{sub&&<p className="mt-1 text-xs text-slate-400">{sub}</p>}</div>}
+function Mini({label,value}:{label:string;value:string|number}){return <div className="rounded-xl bg-slate-50 p-3"><p className="text-lg font-black text-slate-900">{value}</p><p className="text-[10px] font-bold uppercase text-slate-400">{label}</p></div>}
+function Attention({attention}:{attention:SchoolDirectorDashboard['attention']|undefined}){const items=[['Turmas sem professor',attention?.classesWithoutTeacher||0],['Alunos sem turma',attention?.studentsWithoutClass||0],['Alunos sem responsável',attention?.studentsWithoutGuardian||0],['Convites expirados',attention?.expiredPendingInvites||0]] as const;const total=items.reduce((s,i)=>s+Number(i[1]),0)+(attention?.licenseInactive?1:0)+(attention?.seatsExhausted?1:0);return <div className="rounded-3xl bg-white p-6 shadow-sm"><div className="flex items-center justify-between"><div><p className="text-xs font-black uppercase tracking-wider text-slate-400">Atenção operacional</p><h3 className="mt-1 text-xl font-black text-slate-950">{total?'Há itens para revisar':'Tudo em ordem'}</h3></div>{total?<AlertTriangle className="h-6 w-6 text-amber-500"/>:<CheckCircle2 className="h-6 w-6 text-emerald-600"/>}</div><div className="mt-4 space-y-2">{items.map(([label,value])=><div key={label} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-sm"><span className="text-slate-600">{label}</span><strong>{value}</strong></div>)}</div>{total>0&&<button className="mt-4 inline-flex items-center gap-2 text-sm font-black text-primary-700">Revisar implantação <ArrowRight className="h-4 w-4"/></button>}</div>}
