@@ -1,0 +1,49 @@
+{
+  "id": "/hoje",
+  "name": "MindSteps",
+  "short_name": "MindSteps",
+  "description": "IA para aprender melhor e depender menos dela.",
+  "start_url": "/hoje",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F8FAFC",
+  "theme_color": "#6366F1",
+  "lang": "pt-BR",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Hoje",
+      "short_name": "Início",
+      "url": "/hoje",
+      "icons": [{"src":"/favicon.svg","sizes":"any","type":"image/svg+xml"}]
+    },
+    {
+      "name": "Tutor",
+      "short_name": "Tutor",
+      "url": "/chat",
+      "icons": [{"src":"/favicon.svg","sizes":"any","type":"image/svg+xml"}]
+    },
+    {
+      "name": "Meu mapa",
+      "short_name": "Mapa",
+      "url": "/journey",
+      "icons": [{"src":"/favicon.svg","sizes":"any","type":"image/svg+xml"}]
+    },
+    {
+      "name": "Missões",
+      "short_name": "Missões",
+      "url": "/missoes",
+      "icons": [{"src":"/favicon.svg","sizes":"any","type":"image/svg+xml"}]
+    }
+  ],
+  "prefer_related_applications": false
+}
