@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import type { StudentProfile } from '../db/index.js'
 import { getProfileByUserId,updateProfile,createSession,endSession,saveMessage,getSessionMessages,addXP,getTodayUsage,incrementUsage } from '../db/index.js'
 import { generateSocraticResponse,calculateCognitiveLevel } from '../services/ai.js'
 import { buildLearningCoreContext } from '../services/learningCoreContext.js'
@@ -9,7 +10,7 @@ import { saveTransferCheck } from '../services/independentLearning.js'
 import { authMiddleware } from './auth.js'
 const router=Router();router.use(authMiddleware)
 // Server-side safeguard: never rely on UI, client-selected audience or prompts to enforce this restriction.
-const earlyYearsBlocked=(profile:{age_group:string;grade?:string|null})=>getEducationStage(profile)==='anos_iniciais'
+const earlyYearsBlocked=(profile:Pick<StudentProfile,'age_group'|'grade'>)=>getEducationStage(profile)==='anos_iniciais'
 const earlyYearsResponse={code:'GENERATIVE_AI_NOT_AVAILABLE_FOR_EARLY_YEARS',message:'O tutor conversacional não está disponível para estudantes dos anos iniciais. Procure atividades mediadas por um educador e recursos não conversacionais.'}
 
 type HelpMode='hint'|'guided'|'explain'
