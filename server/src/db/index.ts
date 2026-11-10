@@ -147,6 +147,15 @@ export async function createSession(profileId: string, tutorId: string) {
   return data as StudySession
 }
 
+// Verify session ownership before any read/write. JWT authentication alone is not authorization.
+export async function userOwnsSession(userId: string, sessionId: string): Promise<boolean> {
+  const profile = await getProfileByUserId(userId)
+  if (!profile) return false
+  const { data, error } = await supabase.from('study_sessions').select('id').eq('id', sessionId).eq('profile_id', profile.id).maybeSingle()
+  if (error) throw new Error(error.message)
+  return Boolean(data)
+}
+
 export async function endSession(sessionId: string) {
   const { error } = await supabase
     .from('study_sessions')
