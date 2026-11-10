@@ -18,7 +18,7 @@ export function authorizeStudentGenerativeAI(profile: Profile): GenerativeAccess
 
   if (grade !== null) {
     // A declared younger age group always overrides a conflicting older grade.
-    if (profile.age_group === '6-10' && grade > 5) return { allowed: false, code: 'EDUCATION_STAGE_UNVERIFIED', message: 'Dados escolares inconsistentes. Confirme a etapa escolar antes de acessar atividades com IA generativa.' }
+    if ((profile.age_group === '6-10' && grade > 5) || (profile.age_group === '11-14' && grade > 9)) return { allowed: false, code: 'EDUCATION_STAGE_UNVERIFIED', message: 'Dados escolares inconsistentes. Confirme a etapa escolar antes de acessar atividades com IA generativa.' }
     if (grade <= 5) return { allowed: false, code: 'GENERATIVE_AI_NOT_AVAILABLE_FOR_EARLY_YEARS', message: 'Esta atividade com IA generativa não está disponível para estudantes dos anos iniciais.' }
     return { allowed: true, stage: grade <= 9 ? 'anos_finais' : 'ensino_medio' }
   }
