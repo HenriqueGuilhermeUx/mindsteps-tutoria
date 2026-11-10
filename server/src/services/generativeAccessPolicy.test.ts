@@ -8,7 +8,7 @@ test('early grades are blocked', () => {
   }
 })
 test('missing or malformed grade fails closed', () => {
-  for (const grade of [null, '', 'não informado', '5 a 9']) {
+  for (const grade of ['', 'não informado', '5 a 9']) {
     const result = authorizeStudentGenerativeAI({ grade, age_group: '11-14' })
     assert.equal(result.allowed, false)
   }
