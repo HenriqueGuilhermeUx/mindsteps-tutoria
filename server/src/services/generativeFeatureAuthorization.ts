@@ -1,19 +1,10 @@
 import { supabase } from '../db/index.js'
 import type { StudentProfile } from '../db/index.js'
-import { authorizeStudentGenerativeAI } from './generativeAccessPolicy.js'
+import { authorizeStudentGenerativeAI, isExplicitlyMediatedPolicy } from './generativeAccessPolicy.js'
 
 type Profile = Pick<StudentProfile, 'age_group' | 'grade'>
 type Denied = { allowed: false; code: string; message: string }
 type Granted = { allowed: true; stage: 'anos_finais' | 'ensino_medio' }
-
-export function isExplicitlyMediatedPolicy(policy: any, institutionIds: string[], systemKey: string): boolean {
-  return institutionIds.includes(policy?.institution_id) &&
-    policy?.status === 'active' &&
-    Array.isArray(policy?.allowed_systems) &&
-    policy.allowed_systems.includes(systemKey) &&
-    policy.age_rules?.allowGenerativeAIYears6to9 === true &&
-    policy.human_review_rules?.mediatedGenerativeAI === true
-}
 
 export async function authorizeGenerativeFeature(userId: string, profile: Profile, systemKey: 'socratic_tutor' | 'independent_assessment'): Promise<Denied | Granted> {
   const stageDecision = authorizeStudentGenerativeAI(profile)
