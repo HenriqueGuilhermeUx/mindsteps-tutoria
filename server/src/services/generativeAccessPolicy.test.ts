@@ -1,6 +1,6 @@
 import { strict as assert } from 'node:assert'
 import { test } from 'node:test'
-import { authorizeStudentGenerativeAI, isExplicitlyMediatedPolicy } from './generativeAccessPolicy.js'
+import { authorizeStudentGenerativeAI, isExplicitlyMediatedPolicy, hasActiveHumanApproval } from './generativeAccessPolicy.js'
 
 test('early grades are blocked', () => {
   for (const grade of ['1', '5', '5º ano']) {
@@ -56,4 +56,16 @@ test('legacy signup without grade cannot access generative AI', () => {
   const result = authorizeStudentGenerativeAI({ grade: '', age_group: '11-14' })
   assert.deepEqual(result.allowed, false)
   if (!result.allowed) assert.equal(result.code, 'EDUCATION_STAGE_UNVERIFIED')
+})
+
+test('individual approval must match student, school, system and expiry', () => {
+  const now = new Date('2026-11-11T12:00:00Z')
+  const approval = { student_user_id: 'student-1', institution_id: 'school-1', system_key: 'socratic_tutor', status: 'approved', approved_by: 'manager-1', expires_at: '2026-11-12T12:00:00Z' }
+  assert.equal(hasActiveHumanApproval(approval, 'student-1', 'school-1', 'socratic_tutor', now), true)
+  assert.equal(hasActiveHumanApproval(approval, 'student-2', 'school-1', 'socratic_tutor', now), false)
+  assert.equal(hasActiveHumanApproval(approval, 'student-1', 'school-2', 'socratic_tutor', now), false)
+  assert.equal(hasActiveHumanApproval(approval, 'student-1', 'school-1', 'independent_assessment', now), false)
+  assert.equal(hasActiveHumanApproval({ ...approval, status: 'revoked' }, 'student-1', 'school-1', 'socratic_tutor', now), false)
+  assert.equal(hasActiveHumanApproval({ ...approval, approved_by: null }, 'student-1', 'school-1', 'socratic_tutor', now), false)
+  assert.equal(hasActiveHumanApproval({ ...approval, expires_at: '2026-11-10T12:00:00Z' }, 'student-1', 'school-1', 'socratic_tutor', now), false)
 })
