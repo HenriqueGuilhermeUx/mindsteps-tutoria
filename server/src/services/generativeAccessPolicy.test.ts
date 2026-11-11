@@ -45,3 +45,15 @@ test('invalid age group is never treated as verified', () => {
   const result = authorizeStudentGenerativeAI({ grade: '8', age_group: 'unknown' as '11-14' })
   assert.equal(result.allowed, false)
 })
+
+test('declared secondary stage is allowed only with consistent age group', () => {
+  assert.deepEqual(authorizeStudentGenerativeAI({ grade: '10', age_group: '15-17' }), { allowed: true, stage: 'ensino_medio' })
+  assert.equal(authorizeStudentGenerativeAI({ grade: '10', age_group: '11-14' }).allowed, false)
+  assert.equal(authorizeStudentGenerativeAI({ grade: '10', age_group: '6-10' }).allowed, false)
+})
+
+test('legacy signup without grade cannot access generative AI', () => {
+  const result = authorizeStudentGenerativeAI({ grade: '', age_group: '11-14' })
+  assert.deepEqual(result.allowed, false)
+  if (!result.allowed) assert.equal(result.code, 'EDUCATION_STAGE_UNVERIFIED')
+})
