@@ -56,3 +56,18 @@ for each row execute function public.mindsteps_capture_student_ai_approval();
 -- Deploy only after confirming service-role trigger execution privileges and
 -- verifying INSERT/UPDATE rollback if audit insertion fails.
 
+
+-- Guard against accidental UPDATE/DELETE of the append-only event history.
+-- Database owners/superusers can still override this: it is not WORM storage.
+create or replace function public.mindsteps_reject_ai_approval_event_mutation()
+returns trigger language plpgsql security invoker set search_path = '' as $$
+begin
+  raise exception 'AI approval audit events are append-only';
+end;
+$$;
+drop trigger if exists mindsteps_approval_events_immutable on public.mindsteps_ai_student_approval_events;
+create trigger mindsteps_approval_events_immutable
+before update or delete on public.mindsteps_ai_student_approval_events
+for each row execute function public.mindsteps_reject_ai_approval_event_mutation();
+-- Validate this draft against actual PK/FK types and policy schema in staging;
+-- do not execute in production or claim compliance from the presence of SQL.
