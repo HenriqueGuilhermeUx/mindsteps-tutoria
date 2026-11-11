@@ -55,6 +55,21 @@ export async function authorizeGenerativeFeature(userId: string, profile: Profil
     eligibleInstitutionIds.includes(approval.institution_id) &&
     hasActiveHumanApproval(approval, userId, approval.institution_id, systemKey)
   )
-  return authorized ? stageDecision
-    : { allowed: false, code: 'HUMAN_APPROVAL_REQUIRED', message: 'Esta atividade precisa de aprovação individual vigente de um educador autorizado.' }
+  if (!authorized) return { allowed: false, code: 'HUMAN_APPROVAL_REQUIRED', message: 'Esta atividade precisa de aprovação individual vigente de um educador autorizado.' }
+  const activeApprovals = approvals.filter((approval: any) =>
+    eligibleInstitutionIds.includes(approval.institution_id) &&
+    hasActiveHumanApproval(approval, userId, approval.institution_id, systemKey)
+  )
+  const approverIds = [...new Set(activeApprovals.map((approval: any) => approval.approved_by as string))]
+  const { data: reviewers, error: reviewerError } = await supabase
+    .from('mindsteps_institution_members')
+    .select('user_id,institution_id,role,status')
+    .in('user_id', approverIds)
+    .in('institution_id', eligibleInstitutionIds)
+    .eq('status', 'active')
+  if (reviewerError || !reviewers?.some((reviewer: any) =>
+    ['owner', 'admin', 'coordinator'].includes(reviewer.role) &&
+    activeApprovals.some((approval: any) => approval.approved_by === reviewer.user_id && approval.institution_id === reviewer.institution_id)
+  )) return { allowed: false, code: 'HUMAN_APPROVAL_REQUIRED', message: 'A aprovação precisa ser validada por um gestor escolar ativo.' }
+  return stageDecision
 }
