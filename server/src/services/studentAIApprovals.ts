@@ -13,7 +13,7 @@ async function requireManager(actorId:string,institutionId:string){
 async function requireStudent(institutionId:string,studentUserId:string){
   const {data,error}=await supabase.from('mindsteps_student_links')
     .select('id').eq('institution_id',institutionId).eq('user_id',studentUserId)
-    .eq('status','active').eq('role','student').limit(1).maybeSingle()
+    .eq('status','active').limit(1).maybeSingle()
   if(error||!data)throw new Error('Estudante sem vínculo ativo com a escola')
   const profile=await getProfileByUserId(studentUserId)
   if(!profile)throw new Error('Perfil do estudante não encontrado')
