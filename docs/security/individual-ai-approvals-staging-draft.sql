@@ -19,6 +19,8 @@ alter table public.mindsteps_ai_student_approvals enable row level security;
 -- No anon/authenticated policies. Backend-only service-role access after server
 -- authorization; no direct student or public mutation via the Data API.
 revoke all on public.mindsteps_ai_student_approvals from anon,authenticated;
+-- Explicit Data API access for backend service role only (required on newer projects).
+grant select,insert,update on public.mindsteps_ai_student_approvals to service_role;
 -- Append-only decisions: the trigger records both initial approvals and revocations
 -- in the same database transaction as the mutable current-state upsert.
 create table if not exists public.mindsteps_ai_student_approval_events (
@@ -37,6 +39,7 @@ create index if not exists mindsteps_ai_student_approval_events_scope
   on public.mindsteps_ai_student_approval_events(institution_id,student_user_id,recorded_at desc);
 alter table public.mindsteps_ai_student_approval_events enable row level security;
 revoke all on public.mindsteps_ai_student_approval_events from anon,authenticated;
+grant select,insert on public.mindsteps_ai_student_approval_events to service_role;
 -- Even backend service credentials should not directly rewrite past decisions.
 -- Review table ownership, role grants and privileged access before deployment.
 create or replace function public.mindsteps_capture_student_ai_approval()
