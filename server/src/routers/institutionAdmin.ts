@@ -1,5 +1,7 @@
 import { Router } from 'express'
 import { authMiddleware } from './auth.js'
+import { z } from 'zod'
+import { listStudentAIApprovals,setStudentAIApproval } from '../services/studentAIApprovals.js'
 import { createManagedInstitution,createStudentInvite,getInstitutionOverview,getInstitutionStudentAutonomy,listInstitutionInvites,listInstitutionStudents,listManagedInstitutions } from '../services/institutionAdmin.js'
 const router=Router();router.use(authMiddleware)
 router.get('/manage',async(req,res)=>{try{res.json({institutions:await listManagedInstitutions(req.userId)})}catch(error){res.status(500).json({message:error instanceof Error?error.message:'Não foi possível carregar instituições'})}})
@@ -9,4 +11,20 @@ router.get('/manage/:institutionId/students',async(req,res)=>{try{res.json({stud
 router.get('/manage/:institutionId/students/:studentUserId/autonomy',async(req,res)=>{try{res.json(await getInstitutionStudentAutonomy(req.userId,req.params.institutionId,req.params.studentUserId))}catch(error){res.status(403).json({message:error instanceof Error?error.message:'Não foi possível carregar autonomia do estudante'})}})
 router.get('/manage/:institutionId/invites',async(req,res)=>{try{res.json({invites:await listInstitutionInvites(req.userId,req.params.institutionId)})}catch(error){res.status(403).json({message:error instanceof Error?error.message:'Acesso negado'})}})
 router.post('/manage/:institutionId/invites',async(req,res)=>{try{const invite=await createStudentInvite(req.userId,req.params.institutionId,{label:req.body?.label?String(req.body.label):undefined,expiresAt:req.body?.expiresAt?String(req.body.expiresAt):null,maxUses:Number.isFinite(Number(req.body?.maxUses))&&Number(req.body.maxUses)>0?Number(req.body.maxUses):null});res.json({invite})}catch(error){res.status(400).json({message:error instanceof Error?error.message:'Não foi possível criar o convite'})}})
+const aiApprovalSchema=z.object({
+  systemKey:z.enum(['socratic_tutor','independent_assessment']),
+  decision:z.enum(['approved','revoked']),
+  reason:z.string().trim().min(5).max(500)
+})
+router.get('/manage/:institutionId/students/:studentUserId/ai-approvals',async(req,res)=>{
+  res.setHeader('Cache-Control','no-store')
+  try{res.json({approvals:await listStudentAIApprovals(req.userId,req.params.institutionId,req.params.studentUserId)})}
+  catch(error){res.status(403).json({message:error instanceof Error?error.message:'Acesso negado'})}
+})
+router.put('/manage/:institutionId/students/:studentUserId/ai-approvals',async(req,res)=>{
+  res.setHeader('Cache-Control','no-store')
+  try{const input=aiApprovalSchema.parse(req.body)
+    res.json({approval:await setStudentAIApproval(req.userId,req.params.institutionId,req.params.studentUserId,input.systemKey,input.decision,input.reason)})
+  }catch(error){res.status(error instanceof z.ZodError?400:403).json({message:error instanceof z.ZodError?error.errors[0].message:error instanceof Error?error.message:'Não foi possível registrar a decisão'})}
+})
 export default router
