@@ -25,7 +25,7 @@ export async function authorizeGenerativeFeature(userId: string, profile: Profil
   const institutionIds = [...new Set(links.map((link: { institution_id: string }) => link.institution_id))]
   const { data: policies, error: policyError } = await supabase
     .from('mindsteps_ai_school_policies')
-    .select('institution_id,status,allowed_systems,age_rules,human_review_rules')
+    .select('institution_id,status,allowed_systems,prohibited_uses,age_rules,human_review_rules')
     .in('institution_id', institutionIds)
     .eq('status', 'active')
   if (policyError || !policies?.length) {
