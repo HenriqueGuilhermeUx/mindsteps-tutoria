@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { authMiddleware } from './auth.js'
 import { z } from 'zod'
-import { listStudentAIApprovals,setStudentAIApproval } from '../services/studentAIApprovals.js'
+import { listStudentAIApprovals,listStudentAIApprovalHistory,setStudentAIApproval } from '../services/studentAIApprovals.js'
 import { createManagedInstitution,createStudentInvite,getInstitutionOverview,getInstitutionStudentAutonomy,listInstitutionInvites,listInstitutionStudents,listManagedInstitutions } from '../services/institutionAdmin.js'
 const router=Router();router.use(authMiddleware)
 router.get('/manage',async(req,res)=>{try{res.json({institutions:await listManagedInstitutions(req.userId)})}catch(error){res.status(500).json({message:error instanceof Error?error.message:'Não foi possível carregar instituições'})}})
@@ -19,6 +19,11 @@ const aiApprovalSchema=z.object({
 router.get('/manage/:institutionId/students/:studentUserId/ai-approvals',async(req,res)=>{
   res.setHeader('Cache-Control','no-store')
   try{res.json({approvals:await listStudentAIApprovals(req.userId,req.params.institutionId,req.params.studentUserId)})}
+  catch(error){res.status(403).json({message:error instanceof Error?error.message:'Acesso negado'})}
+})
+router.get('/manage/:institutionId/students/:studentUserId/ai-approvals/history',async(req,res)=>{
+  res.setHeader('Cache-Control','no-store')
+  try{res.json({events:await listStudentAIApprovalHistory(req.userId,req.params.institutionId,req.params.studentUserId)})}
   catch(error){res.status(403).json({message:error instanceof Error?error.message:'Acesso negado'})}
 })
 router.put('/manage/:institutionId/students/:studentUserId/ai-approvals',async(req,res)=>{
