@@ -27,13 +27,21 @@ test('institution mediation requires active explicit policy and matching system'
     institution_id: 'school-1',
     status: 'active',
     allowed_systems: ['socratic_tutor'],
+    prohibited_uses: [],
     age_rules: { allowGenerativeAIYears6to9: true },
     human_review_rules: { mediatedGenerativeAI: true },
   }
   assert.equal(isExplicitlyMediatedPolicy(policy, ['school-1'], 'socratic_tutor'), true)
   assert.equal(isExplicitlyMediatedPolicy(policy, ['school-2'], 'socratic_tutor'), false)
   assert.equal(isExplicitlyMediatedPolicy(policy, ['school-1'], 'independent_assessment'), false)
+  assert.equal(isExplicitlyMediatedPolicy({ ...policy, prohibited_uses: ['socratic_tutor'] }, ['school-1'], 'socratic_tutor'), false)
+  assert.equal(isExplicitlyMediatedPolicy({ ...policy, prohibited_uses: undefined }, ['school-1'], 'socratic_tutor'), false)
   assert.equal(isExplicitlyMediatedPolicy({ ...policy, status: 'draft' }, ['school-1'], 'socratic_tutor'), false)
   assert.equal(isExplicitlyMediatedPolicy({ ...policy, human_review_rules: {} }, ['school-1'], 'socratic_tutor'), false)
   assert.equal(isExplicitlyMediatedPolicy({ ...policy, age_rules: {} }, ['school-1'], 'socratic_tutor'), false)
+})
+
+test('invalid age group is never treated as verified', () => {
+  const result = authorizeStudentGenerativeAI({ grade: '8', age_group: 'unknown' as '11-14' })
+  assert.equal(result.allowed, false)
 })
