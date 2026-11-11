@@ -18,7 +18,6 @@ export async function authorizeGenerativeFeature(userId: string, profile: Profil
     .select('institution_id')
     .eq('user_id', userId)
     .eq('status', 'active')
-    .eq('role', 'student')
   if (linkError || !links?.length) {
     return { allowed: false, code: 'INSTITUTION_MEDIATION_REQUIRED', message: 'Para esta etapa escolar, a IA generativa exige vínculo e autorização institucional.' }
   }
