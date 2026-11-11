@@ -27,3 +27,13 @@ export function authorizeStudentGenerativeAI(profile: Profile): GenerativeAccess
   }
   return { allowed: false, code: 'EDUCATION_STAGE_UNVERIFIED', message: 'Confirme a etapa escolar antes de acessar atividades com IA generativa.' }
 }
+
+export function isExplicitlyMediatedPolicy(policy: any, institutionIds: string[], systemKey: string): boolean {
+  return institutionIds.includes(policy?.institution_id) &&
+    policy?.status === 'active' &&
+    Array.isArray(policy?.allowed_systems) &&
+    policy.allowed_systems.includes(systemKey) &&
+    policy.age_rules?.allowGenerativeAIYears6to9 === true &&
+    policy.human_review_rules?.mediatedGenerativeAI === true
+}
+
