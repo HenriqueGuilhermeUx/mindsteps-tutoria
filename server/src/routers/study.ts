@@ -15,7 +15,7 @@ const hasMeaningfulAttempt=(content:string)=>{const t=content.trim().toLowerCase
 const helpLevel=(mode:HelpMode)=>mode==='hint'?1:mode==='guided'?2:3
 const assistedEvidenceScore=(cognitiveLevel:number,attempt:boolean,mode:HelpMode)=>Math.max(0,Math.min(100,Math.round(45+Math.min(25,cognitiveLevel*8)+(attempt?20:0)-(helpLevel(mode)-1)*5)))
 // Let clients explain eligibility without invoking or charging for generative AI.
-router.get('/study/generative-access',async(req,res)=>{try{
+router.get('/study/generative-access',async(req,res)=>{res.setHeader('Cache-Control','no-store');try{
   const profile=await getProfileByUserId(req.userId);
   if(!profile)return res.status(404).json({message:'Perfil não encontrado'});
   const [tutor,assessment]=await Promise.all([
