@@ -42,3 +42,13 @@ export function isExplicitlyMediatedPolicy(policy: any, institutionIds: string[]
     policy.human_review_rules?.mediatedGenerativeAI === true
 }
 
+
+/** A school-wide policy never replaces an individual, scoped human approval. */
+export function hasActiveHumanApproval(approval: any, studentUserId: string, institutionId: string, systemKey: string, now = new Date()): boolean {
+  if (!approval || approval.student_user_id !== studentUserId ||
+      approval.institution_id !== institutionId || approval.system_key !== systemKey ||
+      approval.status !== 'approved' || !approval.approved_by ||
+      typeof approval.expires_at !== 'string') return false
+  const expiry = Date.parse(approval.expires_at)
+  return Number.isFinite(expiry) && expiry > now.getTime()
+}
