@@ -12,6 +12,9 @@ type Profile = Pick<StudentProfile, 'age_group' | 'grade'>
  * Grade 10-12 is accepted as high school only with an explicit grade.
  */
 export function authorizeStudentGenerativeAI(profile: Profile): GenerativeAccessDecision {
+  if (!['6-10', '11-14', '15-17'].includes(profile.age_group)) {
+    return { allowed: false, code: 'EDUCATION_STAGE_UNVERIFIED', message: 'Confirme a faixa etária antes de acessar atividades com IA generativa.' }
+  }
   const rawGrade = typeof profile.grade === 'string' ? profile.grade.trim() : ''
   const match = /^(?:([1-9]|1[0-2])(?:\s*[º°ª.]?\s*(?:ano|série))?|(?:ano|série)\s*([1-9]|1[0-2]))$/i.exec(rawGrade)
   const grade = match ? Number(match[1] || match[2]) : null
@@ -33,6 +36,8 @@ export function isExplicitlyMediatedPolicy(policy: any, institutionIds: string[]
     policy?.status === 'active' &&
     Array.isArray(policy?.allowed_systems) &&
     policy.allowed_systems.includes(systemKey) &&
+    Array.isArray(policy?.prohibited_uses) &&
+    !policy.prohibited_uses.includes(systemKey) &&
     policy.age_rules?.allowGenerativeAIYears6to9 === true &&
     policy.human_review_rules?.mediatedGenerativeAI === true
 }
