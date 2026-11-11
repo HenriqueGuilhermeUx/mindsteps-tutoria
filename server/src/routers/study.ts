@@ -14,6 +14,16 @@ const helpPrompt=(mode:HelpMode,attemptFirst:boolean)=>{const base=mode==='hint'
 const hasMeaningfulAttempt=(content:string)=>{const t=content.trim().toLowerCase();if(t.length>=90)return true;return /eu acho|acho que|tentei|meu raciocínio|meu raciocinio|comecei|cheguei em|fiz assim|minha resposta|porque|portanto|calculei|interpretei|entendi que/.test(t)}
 const helpLevel=(mode:HelpMode)=>mode==='hint'?1:mode==='guided'?2:3
 const assistedEvidenceScore=(cognitiveLevel:number,attempt:boolean,mode:HelpMode)=>Math.max(0,Math.min(100,Math.round(45+Math.min(25,cognitiveLevel*8)+(attempt?20:0)-(helpLevel(mode)-1)*5)))
+// Let clients explain eligibility without invoking or charging for generative AI.
+router.get('/study/generative-access',async(req,res)=>{try{
+  const profile=await getProfileByUserId(req.userId);
+  if(!profile)return res.status(404).json({message:'Perfil não encontrado'});
+  const [tutor,assessment]=await Promise.all([
+    authorizeGenerativeFeature(req.userId,profile,'socratic_tutor'),
+    authorizeGenerativeFeature(req.userId,profile,'independent_assessment')
+  ]);
+  res.json({tutor,assessment});
+}catch(error){console.error('Generative access check error:',error);res.status(503).json({message:'Não foi possível verificar a autorização no momento'})}})
 router.get('/profile',async(req,res)=>{try{const profile=await getProfileByUserId(req.userId);if(!profile)return res.status(404).json({message:'Perfil não encontrado'});res.json(profile)}catch(error){console.error('Get profile error:',error);res.status(500).json({message:'Erro ao buscar perfil'})}})
 router.post('/profile/update',async(req,res)=>{try{const{name,tutorId,petType,petName}=req.body;const updates:any={};if(name)updates.name=name;if(tutorId)updates.tutor_id=tutorId;if(petType)updates.pet_type=petType;if(petName)updates.pet_name=petName;res.json(await updateProfile(req.userId,updates))}catch(error){console.error('Update profile error:',error);res.status(500).json({message:'Erro ao atualizar perfil'})}})
 router.post('/study/startSession',async(req,res)=>{try{const{tutorId}=req.body;const profile=await getProfileByUserId(req.userId);if(!profile)return res.status(404).json({message:'Perfil não encontrado'});const access=await authorizeGenerativeFeature(req.userId,profile,'socratic_tutor');if(!access.allowed)return res.status(403).json({code:access.code,message:access.message});const session=await createSession(profile.id,tutorId||'default');res.json({sessionId:session.id})}catch(error){console.error('Start session error:',error);res.status(500).json({message:'Erro ao iniciar sessão'})}})
