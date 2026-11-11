@@ -6,6 +6,15 @@ type Profile = Pick<StudentProfile, 'age_group' | 'grade'>
 type Denied = { allowed: false; code: string; message: string }
 type Granted = { allowed: true; stage: 'anos_finais' | 'ensino_medio' }
 
+export function isExplicitlyMediatedPolicy(policy: any, institutionIds: string[], systemKey: string): boolean {
+  return institutionIds.includes(policy?.institution_id) &&
+    policy?.status === 'active' &&
+    Array.isArray(policy?.allowed_systems) &&
+    policy.allowed_systems.includes(systemKey) &&
+    policy.age_rules?.allowGenerativeAIYears6to9 === true &&
+    policy.human_review_rules?.mediatedGenerativeAI === true
+}
+
 export async function authorizeGenerativeFeature(userId: string, profile: Profile, systemKey: 'socratic_tutor' | 'independent_assessment'): Promise<Denied | Granted> {
   const stageDecision = authorizeStudentGenerativeAI(profile)
   if (!stageDecision.allowed) return stageDecision
@@ -31,13 +40,7 @@ export async function authorizeGenerativeFeature(userId: string, profile: Profil
   if (policyError || !policies?.length) {
     return { allowed: false, code: 'INSTITUTION_POLICY_REQUIRED', message: 'A escola precisa ativar uma política de IA com mediação humana.' }
   }
-  const authorized = policies.some((policy: any) =>
-    institutionIds.includes(policy.institution_id) &&
-    Array.isArray(policy.allowed_systems) &&
-    policy.allowed_systems.includes(systemKey) &&
-    policy.age_rules?.allowGenerativeAIYears6to9 === true &&
-    policy.human_review_rules?.mediatedGenerativeAI === true
-  )
+  const authorized = policies.some((policy: any) => isExplicitlyMediatedPolicy(policy, institutionIds, systemKey))
   return authorized
     ? stageDecision
     : { allowed: false, code: 'INSTITUTION_POLICY_REQUIRED', message: 'Esta atividade requer autorização explícita e mediação humana pela escola.' }
