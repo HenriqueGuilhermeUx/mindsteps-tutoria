@@ -43,7 +43,7 @@ grant select,insert on public.mindsteps_ai_student_approval_events to service_ro
 -- Even backend service credentials should not directly rewrite past decisions.
 -- Review table ownership, role grants and privileged access before deployment.
 create or replace function public.mindsteps_capture_student_ai_approval()
-returns trigger language plpgsql security invoker set search_path = '' as $
+returns trigger language plpgsql security invoker set search_path = '' as $$
 begin
   insert into public.mindsteps_ai_student_approval_events
     (approval_id,institution_id,student_user_id,system_key,decision,actor_user_id,reason,expires_at)
@@ -51,7 +51,7 @@ begin
     (new.id,new.institution_id,new.student_user_id,new.system_key,new.status,new.approved_by,new.reason,new.expires_at);
   return new;
 end;
-$;
+$$;
 drop trigger if exists mindsteps_student_ai_approval_audit on public.mindsteps_ai_student_approvals;
 create trigger mindsteps_student_ai_approval_audit
 after insert or update on public.mindsteps_ai_student_approvals
