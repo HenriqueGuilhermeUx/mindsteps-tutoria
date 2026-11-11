@@ -45,3 +45,14 @@ export async function setStudentAIApproval(actorId:string,institutionId:string,s
   if(error||!data)throw new Error('Não foi possível registrar a decisão')
   return data
 }
+
+export async function listStudentAIApprovalHistory(actorId:string,institutionId:string,studentUserId:string){
+  await requireManager(actorId,institutionId)
+  await requireStudent(institutionId,studentUserId)
+  const {data,error}=await supabase.from('mindsteps_ai_student_approval_events')
+    .select('id,approval_id,system_key,decision,actor_user_id,reason,expires_at,recorded_at')
+    .eq('institution_id',institutionId).eq('student_user_id',studentUserId)
+    .order('recorded_at',{ascending:false}).limit(100)
+  if(error)throw new Error('Não foi possível consultar o histórico de decisões')
+  return data||[]
+}
