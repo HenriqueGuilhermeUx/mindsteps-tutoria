@@ -69,3 +69,21 @@ test('individual approval must match student, school, system and expiry', () => 
   assert.equal(hasActiveHumanApproval({ ...approval, approved_by: null }, 'student-1', 'school-1', 'socratic_tutor', now), false)
   assert.equal(hasActiveHumanApproval({ ...approval, expires_at: '2026-11-10T12:00:00Z' }, 'student-1', 'school-1', 'socratic_tutor', now), false)
 })
+
+test('approval cannot silently cross school, student or feature boundaries', () => {
+  const now = new Date('2026-11-12T12:00:00Z')
+  const approval = { student_user_id:'s1',institution_id:'i1',system_key:'independent_assessment',status:'approved',approved_by:'m1',expires_at:'2026-11-19T12:00:00Z' }
+  for (const [student,school,system] of [
+    ['s2','i1','independent_assessment'],
+    ['s1','i2','independent_assessment'],
+    ['s1','i1','socratic_tutor']
+  ]) assert.equal(hasActiveHumanApproval(approval,student,school,system,now),false)
+  assert.equal(hasActiveHumanApproval(approval,'s1','i1','independent_assessment',now),true)
+})
+
+test('approval expires at the exact expiry instant and invalid dates deny', () => {
+  const approval={student_user_id:'s1',institution_id:'i1',system_key:'socratic_tutor',status:'approved',approved_by:'m1',expires_at:'2026-11-19T12:00:00Z'}
+  assert.equal(hasActiveHumanApproval(approval,'s1','i1','socratic_tutor',new Date('2026-11-19T11:59:59Z')),true)
+  assert.equal(hasActiveHumanApproval(approval,'s1','i1','socratic_tutor',new Date('2026-11-19T12:00:00Z')),false)
+  assert.equal(hasActiveHumanApproval({...approval,expires_at:'invalid'},'s1','i1','socratic_tutor'),false)
+})
