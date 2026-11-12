@@ -1,26 +1,33 @@
 # MindSteps — Gate de homologação de aprovações individuais de IA
 
-Estado em 2026-11-11: o projeto Supabase `mindsteps.org` (ref `mhyfmacqufllszkaixar`) foi listado como INACTIVE. Uma consulta de leitura ao `information_schema.columns` falhou com `Database is possibly not accessible at the moment`. **Nenhum SQL foi aplicado.**
+Estado em 2026-11-12: **Supabase de produção ACTIVE_HEALTHY** (ref `mhyfmacqufllszkaixar`). Inspeção read-only confirmou tabelas e tipos. **Nenhuma migração foi aplicada em produção.** Branch Supabase bloqueada pelo plano (requer Pro); projeto Supabase gratuito separado bloqueado pelo limite de dois projetos ativos.
 
-## Pré-condições antes de executar SQL
+## Homologação PostgreSQL isolada
 
-1. Confirmar que o projeto escolhido é ambiente isolado de homologação, não produção. Não restaurar nem alterar o projeto inativo sem decisão explícita sobre custos/ambiente.
-2. Consultar tipos e colunas reais de `mindsteps_student_links`, `mindsteps_ai_school_policies`, `mindsteps_institution_members`, `student_profiles`. Confirmar que `role='student'` é um filtro válido e que `prohibited_uses` existe.
-3. Confirmar chaves UUID, restrições, permissões Data API, extensões e RLS. O arquivo `individual-ai-approvals-staging-draft.sql` **não é migração pronta para produção**.
-4. Testar com contas sintéticas: gestor ativo; professor sem papel de gestão; aluno de 5º ano; aluno de 6º–9º; aluno do ensino médio; gestor revogado; vínculos escolares expirados.
-5. Verificar: ausência de política institucional bloqueia; política ativa sem mediação bloqueia; aprovação ausente/expirada/revogada bloqueia; aprovação válida de gestor ativo só libera a funcionalidade autorizada.
-6. Verificar inserção do evento na mesma transação, rollback quando auditoria falhar, impossibilidade de UPDATE/DELETE do histórico e isolamento entre instituições.
-7. Executar advisors de segurança/performance, validar CI e homologar frontend+API com credenciais de teste antes de qualquer merge ou deploy.
+Projeto Neon `mindsteps-ai-approvals-staging` (`cool-shadow-48948005`), PostgreSQL 17, database `mindsteps_staging`, schema `mindsteps_test`. **Não é uma cópia do Supabase**: contém tabelas mínimas e usuários sintéticos, sem Auth, PostgREST ou políticas reais de produção. Não conectar frontend de produção nem copiar dados de alunos.
 
-## Critérios de saída
+### Testes executados no Neon
 
-- [ ] Banco de homologação identificado e ativo
-- [ ] Schema existente inspecionado
-- [ ] SQL adaptado aos tipos reais
-- [ ] RLS e permissões testadas
-- [ ] Auditoria transacional testada
-- [ ] Fluxos positivos e negativos testados
-- [ ] CI e revisão de segurança aprovados
-- [ ] Plano de rollback e liberação controlada revisados
+- [x] Criadas cinco tabelas sintéticas: users, institutions, institution_members, student_approvals, approval_events.
+- [x] RLS habilitado nas três tabelas de membros/aprovações/eventos (habilitação não equivale a teste de acesso com papéis).
+- [x] Trigger registra eventos de aprovação e revogação na mesma transação: 2 eventos confirmados.
+- [x] Tentativa de UPDATE de evento rejeitada com SQLSTATE P0001; histórico permaneceu inalterado.
+- [x] Justificativa composta só de espaços rejeitada com SQLSTATE 23514.
+- [x] Sistema não reconhecido rejeitado com SQLSTATE 23514.
+- [x] Tentativa de INSERT com gestor de outra instituição rejeitada com SQLSTATE P0001 após trigger de escopo.
+- [x] Consulta de elegibilidade mostra aprovação revogada/expirada inelegível.
+- [ ] Teste DELETE do histórico e rollback forçado da auditoria.
+- [ ] Testes de acesso com papéis sem privilégios e RLS real do Supabase.
+- [ ] Cenários de gestor desativado, professor, estudante por faixa escolar, múltiplas escolas e política institucional.
+- [ ] Integração de backend/REST/Auth com ambiente isolado Supabase; Neon não substitui esses serviços.
+- [ ] CI e build da PR #5 verificados e revisados.
 
-**Até concluir os itens acima, manter a PR #5 em draft e produção intocada.**
+## Pré-condições antes de produção
+
+1. Inspecionar dependências reais de `public.users`, `mindsteps_institutions`, `mindsteps_student_links` e `mindsteps_ai_school_policies`; já verificados tipos UUID e coluna role dos vínculos.
+2. Aplicar **primeiro** `institution-members-staging-draft.sql`, **depois** `individual-ai-approvals-staging-draft.sql` apenas em ambiente Supabase isolado, após revisão. Ambos ainda são rascunhos.
+3. Verificar que os triggers `security invoker` possuem privilégios corretos, que o serviço grava e lê, e que não há concessão pública indevida.
+4. Testar ausência/expiração/revogação de autorização, gestor inativo, isolamento de escolas e feature key.
+5. Validar Auth, Data API, RLS, auditoria transacional, CI, frontend e APIs; revisar rollback e segurança.
+
+**Critério de liberação:** PR #5 permanece draft, sem merge nem deploy até a homologação integrada. O Neon valida SQL PostgreSQL de forma parcial, não o stack Supabase completo.
