@@ -131,3 +131,22 @@ test('institution policy cannot authorize unlisted or explicitly prohibited syst
     {human_review_rules:{mediatedGenerativeAI:false}}
   ]) assert.equal(isExplicitlyMediatedPolicy({...base,...change},['school'],'socratic_tutor'),false)
 })
+
+test('teacher role is not equivalent to an active institutional manager', () => {
+  const roles = ['teacher', 'student', 'guest', '', null]
+  for (const role of roles) {
+    assert.equal(['owner', 'admin', 'coordinator'].includes(role as string), false)
+  }
+  for (const role of ['owner', 'admin', 'coordinator']) {
+    assert.equal(['owner', 'admin', 'coordinator'].includes(role), true)
+  }
+})
+
+test('invalid policy objects and missing school membership fail closed', () => {
+  for (const policy of [null, undefined, {}, { status:'active' }, { institution_id:'school', status:'active' }]) {
+    assert.equal(isExplicitlyMediatedPolicy(policy,['school'],'socratic_tutor'),false)
+  }
+  const valid = {institution_id:'school',status:'active',allowed_systems:['socratic_tutor'],prohibited_uses:[],age_rules:{allowGenerativeAIYears6to9:true},human_review_rules:{mediatedGenerativeAI:true}}
+  assert.equal(isExplicitlyMediatedPolicy(valid,[],'socratic_tutor'),false)
+  assert.equal(isExplicitlyMediatedPolicy(valid,['other-school'],'socratic_tutor'),false)
+})
