@@ -7,11 +7,13 @@ on:
       - 'server/**'
       - 'client/**'
       - '.github/workflows/mindsteps-safety-policy.yml'
+      - 'docs/security/**'
   pull_request:
     paths:
       - 'server/**'
       - 'client/**'
       - '.github/workflows/mindsteps-safety-policy.yml'
+      - 'docs/security/**'
   workflow_dispatch:
 jobs:
   safety:
