@@ -33,7 +33,7 @@ export async function listStudentAIApprovals(actorId:string,institutionId:string
 export async function setStudentAIApproval(actorId:string,institutionId:string,studentUserId:string,systemKey:SystemKey,decision:'approved'|'revoked',reason:string){
   await requireManager(actorId,institutionId)
   await requireStudent(institutionId,studentUserId)
-  if(!reason.trim()||reason.length>500)throw new Error('Informe justificativa de até 500 caracteres')
+  if(reason.trim().length<5||reason.trim().length>500)throw new Error('Informe justificativa entre 5 e 500 caracteres')
   const now=new Date()
   const expiry=new Date(now.getTime()+7*24*60*60*1000).toISOString()
   const {data,error}=await supabase.from('mindsteps_ai_student_approvals').upsert({
