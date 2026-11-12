@@ -8,7 +8,7 @@ create table if not exists public.mindsteps_ai_student_approvals (
   status text not null check (status in ('approved','revoked')),
   approved_by uuid not null references public.users(id) on delete restrict,
   expires_at timestamptz not null,
-  reason text,
+  reason text not null check (char_length(btrim(reason)) between 5 and 500),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (institution_id,student_user_id,system_key)
@@ -26,12 +26,12 @@ grant select,insert,update on public.mindsteps_ai_student_approvals to service_r
 create table if not exists public.mindsteps_ai_student_approval_events (
   id uuid primary key default gen_random_uuid(),
   approval_id uuid not null references public.mindsteps_ai_student_approvals(id),
-  institution_id uuid not null,
-  student_user_id uuid not null,
+  institution_id uuid not null references public.mindsteps_institutions(id) on delete restrict,
+  student_user_id uuid not null references public.users(id) on delete restrict,
   system_key text not null,
   decision text not null check (decision in ('approved','revoked')),
   actor_user_id uuid not null references public.users(id) on delete restrict,
-  reason text not null,
+  reason text not null check (char_length(btrim(reason)) between 5 and 500),
   expires_at timestamptz not null,
   recorded_at timestamptz not null default now()
 );
