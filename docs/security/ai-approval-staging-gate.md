@@ -16,11 +16,11 @@ Projeto Neon `mindsteps-ai-approvals-staging` (`cool-shadow-48948005`), PostgreS
 - [x] Sistema não reconhecido rejeitado com SQLSTATE 23514.
 - [x] Tentativa de INSERT com gestor de outra instituição rejeitada com SQLSTATE P0001 após trigger de escopo.
 - [x] Consulta de elegibilidade mostra aprovação revogada/expirada inelegível.
-- [ ] Teste DELETE do histórico e rollback forçado da auditoria.
+- [x] DELETE do histórico rejeitado com SQLSTATE P0001; rollback forçado da auditoria ainda pendente.
 - [ ] Testes de acesso com papéis sem privilégios e RLS real do Supabase.
-- [ ] Cenários de gestor desativado, professor, estudante por faixa escolar, múltiplas escolas e política institucional.
+- [x] Gestor revogado rejeitado pelo trigger de escopo e consulta de vínculo ativo; tentativas entre escolas rejeitadas.\n- [ ] Professor, estudante por faixa escolar, múltiplas escolas e política institucional em testes integrados.
 - [ ] Integração de backend/REST/Auth com ambiente isolado Supabase; Neon não substitui esses serviços.
-- [ ] CI e build da PR #5 verificados e revisados.
+- [ ] CI e build da PR #5 verificados e revisados; a consulta disponível de runs retorna apenas execuções de PR, portanto ausência de resultados não comprova ausência de runs de push.
 
 ## Pré-condições antes de produção
 
