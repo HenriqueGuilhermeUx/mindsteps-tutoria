@@ -87,3 +87,47 @@ test('approval expires at the exact expiry instant and invalid dates deny', () =
   assert.equal(hasActiveHumanApproval(approval,'s1','i1','socratic_tutor',new Date('2026-11-19T12:00:00Z')),false)
   assert.equal(hasActiveHumanApproval({...approval,expires_at:'invalid'},'s1','i1','socratic_tutor'),false)
 })
+
+test('grade and age policy boundary matrix fails closed for early and ambiguous students', () => {
+  for (const age_group of ['6-10','11-14','15-17'] as const) {
+    for (const grade of ['1','2','3','4','5']) {
+      const result = authorizeStudentGenerativeAI({ grade, age_group })
+      assert.equal(result.allowed, false, `grade ${grade}, age ${age_group}`)
+    }
+    for (const grade of ['', '6-9', 'ensino médio', '13', '0', '8/9']) {
+      const result = authorizeStudentGenerativeAI({ grade, age_group })
+      assert.equal(result.allowed, false, `grade ${grade}, age ${age_group}`)
+    }
+  }
+  for (const grade of ['6','7','8','9']) {
+    assert.deepEqual(authorizeStudentGenerativeAI({grade,age_group:'11-14'}), {allowed:true,stage:'anos_finais'})
+    assert.equal(authorizeStudentGenerativeAI({grade,age_group:'6-10'}).allowed,false)
+  }
+  for (const grade of ['10','11','12']) {
+    assert.deepEqual(authorizeStudentGenerativeAI({grade,age_group:'15-17'}), {allowed:true,stage:'ensino_medio'})
+    assert.equal(authorizeStudentGenerativeAI({grade,age_group:'11-14'}).allowed,false)
+  }
+})
+
+test('revocation, malformed approval and exact expiry never grant access', () => {
+  const base = {student_user_id:'student',institution_id:'school',system_key:'socratic_tutor',status:'approved',approved_by:'manager',expires_at:'2026-11-19T12:00:00Z'}
+  const now = new Date('2026-11-19T12:00:00Z')
+  for (const change of [
+    {status:'revoked'}, {status:'pending'}, {approved_by:''},
+    {student_user_id:'other'}, {institution_id:'other'},
+    {system_key:'independent_assessment'}, {expires_at:'2026-11-19T12:00:00Z'},
+    {expires_at:'not-a-date'}
+  ]) {
+    assert.equal(hasActiveHumanApproval({...base,...change},'student','school','socratic_tutor',now),false)
+  }
+})
+
+test('institution policy cannot authorize unlisted or explicitly prohibited systems', () => {
+  const base = {institution_id:'school',status:'active',allowed_systems:['socratic_tutor'],prohibited_uses:[],age_rules:{allowGenerativeAIYears6to9:true},human_review_rules:{mediatedGenerativeAI:true}}
+  assert.equal(isExplicitlyMediatedPolicy(base,['school'],'socratic_tutor'),true)
+  for (const change of [
+    {status:'inactive'}, {allowed_systems:[]}, {prohibited_uses:['socratic_tutor']},
+    {age_rules:{allowGenerativeAIYears6to9:false}},
+    {human_review_rules:{mediatedGenerativeAI:false}}
+  ]) assert.equal(isExplicitlyMediatedPolicy({...base,...change},['school'],'socratic_tutor'),false)
+})
