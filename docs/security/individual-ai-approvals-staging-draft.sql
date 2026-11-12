@@ -74,3 +74,26 @@ before update or delete on public.mindsteps_ai_student_approval_events
 for each row execute function public.mindsteps_reject_ai_approval_event_mutation();
 -- Validate this draft against actual PK/FK types and policy schema in staging;
 -- do not execute in production or claim compliance from the presence of SQL.
+
+-- Defense in depth: approval author must be an active manager of the SAME institution.
+-- Requires mindsteps_institution_members migration to be applied first.
+create or replace function public.mindsteps_enforce_ai_approval_manager_scope()
+returns trigger language plpgsql security invoker set search_path = '' as $$
+begin
+  if not exists (
+    select 1 from public.mindsteps_institution_members m
+    where m.institution_id = new.institution_id
+      and m.user_id = new.approved_by
+      and m.status = 'active'
+      and m.role in ('owner','admin','coordinator')
+  ) then
+    raise exception 'Approval actor is not an active manager of this institution';
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists mindsteps_ai_approval_manager_scope on public.mindsteps_ai_student_approvals;
+create trigger mindsteps_ai_approval_manager_scope
+before insert or update on public.mindsteps_ai_student_approvals
+for each row execute function public.mindsteps_enforce_ai_approval_manager_scope();
+-- Staging test: cross-institution INSERT rejected with SQLSTATE P0001.
