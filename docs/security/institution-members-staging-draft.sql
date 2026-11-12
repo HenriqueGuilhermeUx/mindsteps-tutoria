@@ -2,7 +2,8 @@
 -- Inspected on mindsteps.org 2026-11-12:
 -- public.mindsteps_institutions.id is UUID; parent_institution_id is missing;
 -- public.mindsteps_institution_members is missing.
--- Review against existing auth/user FK conventions before executing.
+-- Verified: student_profiles.user_id references public.users(id); do not use auth.users here.
+-- Run only on a disposable staging clone after reviewing privileges and rollback.
 begin;
 
 alter table public.mindsteps_institutions
@@ -15,7 +16,7 @@ create index if not exists mindsteps_institutions_parent_idx
 create table if not exists public.mindsteps_institution_members (
   id uuid primary key default gen_random_uuid(),
   institution_id uuid not null references public.mindsteps_institutions(id) on delete cascade,
-  user_id uuid not null,
+  user_id uuid not null references public.users(id) on delete restrict,
   role text not null check (role in ('owner','admin','coordinator','teacher')),
   status text not null default 'active' check (status in ('active','inactive','revoked')),
   created_at timestamptz not null default now(),
