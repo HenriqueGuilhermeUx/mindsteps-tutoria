@@ -71,6 +71,12 @@ BEGIN
  EXCEPTION WHEN raise_exception THEN
   IF SQLERRM <> 'Approval actor is not an active manager of this institution' THEN RAISE; END IF;
  END;
+ BEGIN
+  INSERT INTO public.mindsteps_ai_student_approvals(institution_id,student_user_id,system_key,status,approved_by,expires_at,reason)
+  VALUES ('10000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000002','independent_assessment','approved','00000000-0000-4000-8000-000000000003',now()+interval '1 day','     ');
+  RAISE EXCEPTION 'Whitespace-only reason unexpectedly succeeded';
+ EXCEPTION WHEN check_violation THEN NULL;
+ END;
  SELECT count(*) INTO event_count FROM public.mindsteps_ai_student_approval_events;
  IF event_count <> 1 THEN RAISE EXCEPTION 'Denied operations changed audit history'; END IF;
  UPDATE public.mindsteps_ai_student_approvals SET status='revoked',reason='Revogacao auditada' WHERE id=approval_id;
