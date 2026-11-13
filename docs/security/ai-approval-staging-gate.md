@@ -34,7 +34,7 @@ Projeto Neon `mindsteps-ai-approvals-staging` (`cool-shadow-48948005`), PostgreS
 
 
 ### Bloqueio de troca de identidade (pendente de execução)
-- [ ] Aplicar no ambiente descartável o trigger `mindsteps_ai_approval_identity_guard` do SQL de staging.
-- [ ] Confirmar que UPDATE de `id`, `institution_id`, `student_user_id`, `system_key` e `created_at` retorna SQLSTATE P0001 e não gera evento de auditoria.
+- [x] Instalada versão equivalente do trigger de identidade em `mindsteps_test.student_approvals` no Neon (não é execução literal da migração Supabase).
+- [x] UPDATE de `system_key` rejeitado com SQLSTATE P0001; a linha preservou `socratic_tutor` e a contagem de eventos permaneceu 2.\n- [ ] Repetir separadamente para `id`, `institution_id`, `student_user_id` e `created_at`.
 - [ ] Confirmar que UPDATE legítimo de `status`, `expires_at` e `reason` permanece permitido e gera evento.
 - [ ] Confirmar que a migração completa é executável na ordem: membros institucionais, aprovações, triggers, grants e políticas.
