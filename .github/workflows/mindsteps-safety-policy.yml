@@ -48,3 +48,27 @@ jobs:
         run: npm run typecheck
       - name: Production build verification
         run: npm run build
+  database-staging:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: mindsteps_safety_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d mindsteps_safety_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Apply actual staging SQL drafts and assert security invariants
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -d mindsteps_safety_ci -v ON_ERROR_STOP=1 -f docs/security/staging-migration-smoke.sql
