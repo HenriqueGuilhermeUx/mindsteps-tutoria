@@ -1,0 +1,74 @@
+name: MindSteps Responsible AI Safety
+on:
+  push:
+    branches:
+      - safety/central-ai-access-policy-20261110
+    paths:
+      - 'server/**'
+      - 'client/**'
+      - '.github/workflows/mindsteps-safety-policy.yml'
+      - 'docs/security/**'
+  pull_request:
+    paths:
+      - 'server/**'
+      - 'client/**'
+      - '.github/workflows/mindsteps-safety-policy.yml'
+      - 'docs/security/**'
+  workflow_dispatch:
+jobs:
+  safety:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install backend dependencies
+        run: npm install --no-audit --no-fund
+      - name: TypeScript build
+        run: npm run build
+      - name: Policy regression tests
+        run: npm test
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install frontend dependencies
+        run: npm install --no-audit --no-fund
+      - name: TypeScript typecheck
+        run: npm run typecheck
+      - name: Production build verification
+        run: npm run build
+  database-staging:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: mindsteps_safety_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d mindsteps_safety_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Apply actual staging SQL drafts and assert security invariants
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -d mindsteps_safety_ci -v ON_ERROR_STOP=1 -f docs/security/staging-migration-smoke.sql
