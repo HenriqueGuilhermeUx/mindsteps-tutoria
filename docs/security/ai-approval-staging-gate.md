@@ -38,3 +38,12 @@ Projeto Neon `mindsteps-ai-approvals-staging` (`cool-shadow-48948005`), PostgreS
 - [x] UPDATE de `system_key` rejeitado com SQLSTATE P0001; a linha preservou `socratic_tutor` e a contagem de eventos permaneceu 2.\n- [x] UPDATE separado de `id`, `institution_id`, `student_user_id` e `created_at` rejeitado com SQLSTATE P0001 em todos os quatro casos.\n- [x] Consulta posterior confirmou identidade original intacta e contagem de 2 eventos de auditoria.
 - [x] UPDATE legítimo de `status`, `expires_at` e `reason` aceito no Neon; decisão `revoked` registrada e eventos de auditoria passaram de 2 para 3.
 - [ ] Confirmar que a migração completa é executável na ordem: membros institucionais, aprovações, triggers, grants e políticas.
+
+
+### CI PostgreSQL 17 — evidências exigidas antes de liberar
+- [x] Job `database-staging` configurado no GitHub Actions para executar os dois scripts SQL de staging em banco temporário.
+- [x] Smoke test versionado inclui identidade imutável, autorização por escola, rejeição de professor, justificativa vazia, revogação, auditoria, RLS e privilégios.
+- [ ] Obter link e conclusão **success** da execução real do job `database-staging`; arquivo de teste criado não equivale a teste aprovado.
+- [ ] Revisar os logs da execução, inclusive erros de permissão ou incompatibilidade com PostgreSQL 17.
+- [ ] Testar privilégios reais do Supabase (`service_role` e funções de trigger) em clone isolado antes de migração.
+- [ ] Revisar risco residual: `service_role` possui INSERT no histórico; append-only impede alterações e exclusões, mas não impede inserções diretas forjadas por credencial comprometida.
