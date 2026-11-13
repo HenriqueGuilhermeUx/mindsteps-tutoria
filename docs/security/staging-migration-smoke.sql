@@ -83,4 +83,27 @@ BEGIN
   IF SQLERRM <> 'AI approval audit events are append-only' THEN RAISE; END IF;
  END;
 END $$;
+-- Assert the SQL drafts deny direct anonymous/authenticated table access.
+DO $
+DECLARE rel text;
+BEGIN
+ FOREACH rel IN ARRAY ARRAY['mindsteps_institution_members','mindsteps_ai_student_approvals','mindsteps_ai_student_approval_events'] LOOP
+  IF NOT (SELECT relrowsecurity FROM pg_class WHERE oid=('public.'||rel)::regclass) THEN
+    RAISE EXCEPTION 'RLS disabled on %',rel;
+  END IF;
+  IF has_table_privilege('anon',('public.'||rel)::regclass,'SELECT')
+    OR has_table_privilege('anon',('public.'||rel)::regclass,'INSERT')
+    OR has_table_privilege('authenticated',('public.'||rel)::regclass,'SELECT')
+    OR has_table_privilege('authenticated',('public.'||rel)::regclass,'INSERT') THEN
+    RAISE EXCEPTION 'Client role unexpectedly has access to %',rel;
+  END IF;
+  IF NOT has_table_privilege('service_role',('public.'||rel)::regclass,'SELECT') THEN
+    RAISE EXCEPTION 'Service role missing SELECT on %',rel;
+  END IF;
+ END LOOP;
+ IF has_table_privilege('service_role','public.mindsteps_ai_student_approval_events','UPDATE')
+   OR has_table_privilege('service_role','public.mindsteps_ai_student_approval_events','DELETE') THEN
+   RAISE EXCEPTION 'Service role can rewrite audit history';
+ END IF;
+END $;
 SELECT 'SQL staging migration smoke test passed' AS result;
