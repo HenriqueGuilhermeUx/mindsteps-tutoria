@@ -31,3 +31,10 @@ Projeto Neon `mindsteps-ai-approvals-staging` (`cool-shadow-48948005`), PostgreS
 5. Validar Auth, Data API, RLS, auditoria transacional, CI, frontend e APIs; revisar rollback e segurança.
 
 **Critério de liberação:** PR #5 permanece draft, sem merge nem deploy até a homologação integrada. O Neon valida SQL PostgreSQL de forma parcial, não o stack Supabase completo.
+
+
+### Bloqueio de troca de identidade (pendente de execução)
+- [ ] Aplicar no ambiente descartável o trigger `mindsteps_ai_approval_identity_guard` do SQL de staging.
+- [ ] Confirmar que UPDATE de `id`, `institution_id`, `student_user_id`, `system_key` e `created_at` retorna SQLSTATE P0001 e não gera evento de auditoria.
+- [ ] Confirmar que UPDATE legítimo de `status`, `expires_at` e `reason` permanece permitido e gera evento.
+- [ ] Confirmar que a migração completa é executável na ordem: membros institucionais, aprovações, triggers, grants e políticas.
