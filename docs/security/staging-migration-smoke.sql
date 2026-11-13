@@ -39,6 +39,40 @@ BEGIN
  EXCEPTION WHEN raise_exception THEN
   IF SQLERRM <> 'Approval actor is not an active manager of this institution' THEN RAISE; END IF;
  END;
+ -- Verify every immutable field, not only the system key.
+ BEGIN
+  UPDATE public.mindsteps_ai_student_approvals SET id='00000000-0000-4000-8000-000000000003' WHERE id=approval_id;
+  RAISE EXCEPTION 'ID update unexpectedly succeeded';
+ EXCEPTION WHEN raise_exception THEN
+  IF SQLERRM <> 'AI approval identity and creation timestamp are immutable' THEN RAISE; END IF;
+ END;
+ BEGIN
+  UPDATE public.mindsteps_ai_student_approvals SET institution_id='10000000-0000-4000-8000-000000000002' WHERE id=approval_id;
+  RAISE EXCEPTION 'School update unexpectedly succeeded';
+ EXCEPTION WHEN raise_exception THEN
+  IF SQLERRM <> 'AI approval identity and creation timestamp are immutable' THEN RAISE; END IF;
+ END;
+ BEGIN
+  UPDATE public.mindsteps_ai_student_approvals SET student_user_id='00000000-0000-4000-8000-000000000003' WHERE id=approval_id;
+  RAISE EXCEPTION 'Student update unexpectedly succeeded';
+ EXCEPTION WHEN raise_exception THEN
+  IF SQLERRM <> 'AI approval identity and creation timestamp are immutable' THEN RAISE; END IF;
+ END;
+ BEGIN
+  UPDATE public.mindsteps_ai_student_approvals SET created_at=now()+interval '1 day' WHERE id=approval_id;
+  RAISE EXCEPTION 'Created-at update unexpectedly succeeded';
+ EXCEPTION WHEN raise_exception THEN
+  IF SQLERRM <> 'AI approval identity and creation timestamp are immutable' THEN RAISE; END IF;
+ END;
+ BEGIN
+  INSERT INTO public.mindsteps_ai_student_approvals(institution_id,student_user_id,system_key,status,approved_by,expires_at,reason)
+  VALUES ('10000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000002','socratic_tutor','approved','00000000-0000-4000-8000-000000000001',now()+interval '1 day','Gestor de outra escola');
+  RAISE EXCEPTION 'Cross-school approval unexpectedly succeeded';
+ EXCEPTION WHEN raise_exception THEN
+  IF SQLERRM <> 'Approval actor is not an active manager of this institution' THEN RAISE; END IF;
+ END;
+ SELECT count(*) INTO event_count FROM public.mindsteps_ai_student_approval_events;
+ IF event_count <> 1 THEN RAISE EXCEPTION 'Denied operations changed audit history'; END IF;
  UPDATE public.mindsteps_ai_student_approvals SET status='revoked',reason='Revogacao auditada' WHERE id=approval_id;
  SELECT count(*) INTO event_count FROM public.mindsteps_ai_student_approval_events;
  IF event_count <> 2 THEN RAISE EXCEPTION 'Revocation audit missing'; END IF;
