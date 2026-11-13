@@ -73,7 +73,7 @@ BEGIN
  END;
  BEGIN
   INSERT INTO public.mindsteps_ai_student_approvals(institution_id,student_user_id,system_key,status,approved_by,expires_at,reason)
-  VALUES ('10000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000002','independent_assessment','approved','00000000-0000-4000-8000-000000000003',now()+interval '1 day','     ');
+  VALUES ('10000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002','independent_assessment','approved','00000000-0000-4000-8000-000000000001',now()+interval '1 day','     ');
   RAISE EXCEPTION 'Whitespace-only reason unexpectedly succeeded';
  EXCEPTION WHEN check_violation THEN NULL;
  END;
