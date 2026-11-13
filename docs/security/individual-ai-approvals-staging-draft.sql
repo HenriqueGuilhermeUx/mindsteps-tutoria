@@ -97,3 +97,26 @@ create trigger mindsteps_ai_approval_manager_scope
 before insert or update on public.mindsteps_ai_student_approvals
 for each row execute function public.mindsteps_enforce_ai_approval_manager_scope();
 -- Staging test: cross-institution INSERT rejected with SQLSTATE P0001.
+
+-- Identity of an approval must remain fixed throughout its lifetime.
+-- Revocation and renewal update status/expiry/reason, never the school, student,
+-- feature or primary key; a new scope requires a separate approval record.
+create or replace function public.mindsteps_protect_ai_approval_identity()
+returns trigger language plpgsql security invoker set search_path = '' as $$
+begin
+  if new.id is distinct from old.id
+    or new.institution_id is distinct from old.institution_id
+    or new.student_user_id is distinct from old.student_user_id
+    or new.system_key is distinct from old.system_key
+    or new.created_at is distinct from old.created_at then
+    raise exception 'AI approval identity and creation timestamp are immutable';
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists mindsteps_ai_approval_identity_guard on public.mindsteps_ai_student_approvals;
+create trigger mindsteps_ai_approval_identity_guard
+before update on public.mindsteps_ai_student_approvals
+for each row execute function public.mindsteps_protect_ai_approval_identity();
+-- Staging requirement: UPDATE of school/student/system/id/created_at must fail
+-- with SQLSTATE P0001 without modifying approval or append-only audit history.
