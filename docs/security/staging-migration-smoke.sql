@@ -90,7 +90,7 @@ BEGIN
  END;
 END $$;
 -- Assert the SQL drafts deny direct anonymous/authenticated table access.
-DO $
+DO $$
 DECLARE rel text;
 BEGIN
  FOREACH rel IN ARRAY ARRAY['mindsteps_institution_members','mindsteps_ai_student_approvals','mindsteps_ai_student_approval_events'] LOOP
@@ -111,5 +111,5 @@ BEGIN
    OR has_table_privilege('service_role','public.mindsteps_ai_student_approval_events','DELETE') THEN
    RAISE EXCEPTION 'Service role can rewrite audit history';
  END IF;
-END $;
+END $$;
 SELECT 'SQL staging migration smoke test passed' AS result;
