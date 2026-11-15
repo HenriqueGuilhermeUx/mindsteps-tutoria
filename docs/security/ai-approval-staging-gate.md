@@ -47,3 +47,10 @@ Projeto Neon `mindsteps-ai-approvals-staging` (`cool-shadow-48948005`), PostgreS
 - [ ] Revisar os logs da execução, inclusive erros de permissão ou incompatibilidade com PostgreSQL 17.
 - [ ] Testar privilégios reais do Supabase (`service_role` e funções de trigger) em clone isolado antes de migração.
 - [ ] Revisar risco residual: `service_role` possui INSERT no histórico; append-only impede alterações e exclusões, mas não impede inserções diretas forjadas por credencial comprometida.
+
+### Evidência adicional — revogação de gestor
+- [x] GitHub Actions Responsible AI Safety #103: `database-staging`, `safety` e `frontend` aprovados em `b0ac15f46b219cdb7db2a04c51044ee44f00b014` — https://github.com/HenriqueGuilhermeUx/mindsteps-tutoria/actions/runs/43762526492
+- [x] Validate MindSteps Release #335 aprovado — https://github.com/HenriqueGuilhermeUx/mindsteps-tutoria/actions/runs/43762526495
+- [x] Smoke test SQL bloqueia renovação de aprovação após revogação do vínculo do gestor, sem adicionar evento de auditoria.
+- [ ] Testar fluxo HTTP completo com autenticação real, vínculo escolar, política e aprovação em ambiente isolado.
+- [ ] Validar execução sob papéis reais do Supabase em clone isolado; aprovação no PostgreSQL CI não substitui esta etapa.
