@@ -82,6 +82,21 @@ BEGIN
  UPDATE public.mindsteps_ai_student_approvals SET status='revoked',reason='Revogacao auditada' WHERE id=v_approval_id;
  SELECT count(*) INTO event_count FROM public.mindsteps_ai_student_approval_events;
  IF event_count <> 2 THEN RAISE EXCEPTION 'Revocation audit missing'; END IF;
+ -- An active manager who loses membership must no longer renew approvals.
+ UPDATE public.mindsteps_institution_members SET status='revoked'
+ WHERE institution_id='10000000-0000-4000-8000-000000000001'
+   AND user_id='00000000-0000-4000-8000-000000000001';
+ BEGIN
+  UPDATE public.mindsteps_ai_student_approvals
+   SET status='approved',expires_at=now()+interval '1 day',reason='Tentativa apos revogacao'
+   WHERE id=v_approval_id;
+  RAISE EXCEPTION 'Revoked manager unexpectedly renewed approval';
+ EXCEPTION WHEN raise_exception THEN
+  IF SQLERRM <> 'Approval actor is not an active manager of this institution' THEN RAISE; END IF;
+ END;
+ SELECT count(*) INTO event_count FROM public.mindsteps_ai_student_approval_events;
+ IF event_count <> 2 THEN RAISE EXCEPTION 'Revoked manager changed audit history'; END IF;
+
  BEGIN
   DELETE FROM public.mindsteps_ai_student_approval_events WHERE approval_id=v_approval_id;
   RAISE EXCEPTION 'Audit deletion unexpectedly succeeded';
