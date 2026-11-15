@@ -43,7 +43,7 @@ Projeto Neon `mindsteps-ai-approvals-staging` (`cool-shadow-48948005`), PostgreS
 ### CI PostgreSQL 17 — evidências exigidas antes de liberar
 - [x] Job `database-staging` configurado no GitHub Actions para executar os dois scripts SQL de staging em banco temporário.
 - [x] Smoke test versionado inclui identidade imutável, autorização por escola, rejeição de professor, justificativa vazia, revogação, auditoria, RLS e privilégios.
-- [ ] Obter link e conclusão **success** da execução real do job `database-staging`; arquivo de teste criado não equivale a teste aprovado.
+- [x] Execução real do job `database-staging` aprovada no workflow Responsible AI Safety #100, commit `efa06474dcbb13d1124c13174e463c0cb8589747`: https://github.com/HenriqueGuilhermeUx/mindsteps-tutoria/actions/runs/43502693494 (backend, frontend e PostgreSQL 17: success).
 - [ ] Revisar os logs da execução, inclusive erros de permissão ou incompatibilidade com PostgreSQL 17.
 - [ ] Testar privilégios reais do Supabase (`service_role` e funções de trigger) em clone isolado antes de migração.
 - [ ] Revisar risco residual: `service_role` possui INSERT no histórico; append-only impede alterações e exclusões, mas não impede inserções diretas forjadas por credencial comprometida.
