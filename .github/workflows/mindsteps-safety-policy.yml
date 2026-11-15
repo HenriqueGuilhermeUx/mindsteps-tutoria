@@ -30,7 +30,10 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: TypeScript build
         run: npm run build
-      - name: Policy regression tests
+      - name: Policy regression tests (isolated Supabase adapter; no network calls)
+        env:
+          SUPABASE_URL: http://127.0.0.1:54321
+          SUPABASE_ANON_KEY: mindsteps-ci-mock-key-no-real-credentials
         run: npm test
   frontend:
     runs-on: ubuntu-latest
