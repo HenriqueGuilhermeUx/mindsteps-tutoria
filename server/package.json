@@ -6,7 +6,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "tsx --test src/services/generativeAccessPolicy.test.ts src/services/generativeFeatureAuthorization.test.ts"
+    "test": "tsx --test src/services/generativeAccessPolicy.test.ts src/services/generativeFeatureAuthorization.test.ts src/routers/institutionAdmin.http.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.43.4",
