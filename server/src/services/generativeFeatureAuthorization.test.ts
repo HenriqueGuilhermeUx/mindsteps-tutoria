@@ -97,3 +97,38 @@ test('a policy for one system never permits another system', async () => {
   const result = await authorizeGenerativeFeature(student, profile, 'independent_assessment', db)
   assert.equal(result.allowed, false)
 })
+
+
+test('inactive, teacher-only, or another student school link denies', async () => {
+  for (const change of [
+    { status: 'inactive' },
+    { role: 'teacher' },
+    { user_id: 'another-student' },
+  ]) {
+    const { db } = fakeDb({ mindsteps_student_links: { data: [{ institution_id: school, user_id: student, role: 'student', status: 'active', ...change }], error: null } })
+    assert.equal((await authorizeGenerativeFeature(student, profile, 'socratic_tutor', db)).allowed, false)
+  }
+})
+
+test('cross-school, another student, and wrong-system approvals never authorize', async () => {
+  for (const change of [
+    { institution_id: 'school-b' },
+    { student_user_id: 'another-student' },
+    { system_key: 'independent_assessment' },
+  ]) {
+    const { db } = fakeDb({ mindsteps_ai_student_approvals: { data: [{ ...approval, ...change }], error: null } })
+    assert.equal((await authorizeGenerativeFeature(student, profile, 'socratic_tutor', db)).allowed, false)
+  }
+})
+
+test('a second school cannot lend its manager to an approval from the first', async () => {
+  const { db } = fakeDb({
+    mindsteps_student_links: { data: [
+      { institution_id: school, user_id: student, role: 'student', status: 'active' },
+      { institution_id: 'school-b', user_id: student, role: 'student', status: 'active' },
+    ], error: null },
+    mindsteps_ai_school_policies: { data: [policy, { ...policy, institution_id: 'school-b' }], error: null },
+    mindsteps_institution_members: { data: [{ ...reviewer, institution_id: 'school-b' }], error: null },
+  })
+  assert.equal((await authorizeGenerativeFeature(student, profile, 'socratic_tutor', db)).allowed, false)
+})
