@@ -13,7 +13,7 @@ const reviewer = { user_id: manager, institution_id: school, role: 'coordinator'
 type Table = 'mindsteps_student_links' | 'mindsteps_ai_school_policies' | 'mindsteps_ai_student_approvals' | 'mindsteps_institution_members'
 function fakeDb(overrides: Partial<Record<Table, { data: any[] | null; error: unknown }>> = {}) {
   const rows: Record<Table, { data: any[] | null; error: unknown }> = {
-    mindsteps_student_links: { data: [{ institution_id: school }], error: null },
+    mindsteps_student_links: { data: [{ institution_id: school, user_id: student, role: 'student', status: 'active' }], error: null },
     mindsteps_ai_school_policies: { data: [policy], error: null },
     mindsteps_ai_student_approvals: { data: [approval], error: null },
     mindsteps_institution_members: { data: [reviewer], error: null },
@@ -29,7 +29,12 @@ function fakeDb(overrides: Partial<Record<Table, { data: any[] | null; error: un
         eq(field: string, value: unknown) { call.filters.push(['eq', field, value]); return query },
         in(field: string, value: unknown) { call.filters.push(['in', field, value]); return query },
         then(resolve: (result: { data: any[] | null; error: unknown }) => unknown) {
-          return Promise.resolve(rows[table]).then(resolve)
+          const result = rows[table]
+          if (result.error || !result.data) return Promise.resolve(result).then(resolve)
+          const data = result.data.filter(row => call.filters.every(([kind, field, value]) =>
+            kind === 'eq' ? row[field] === value : Array.isArray(value) && value.includes(row[field])
+          ))
+          return Promise.resolve({ data, error: null }).then(resolve)
         },
       }
       return query
