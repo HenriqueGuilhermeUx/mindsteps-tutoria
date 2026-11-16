@@ -75,3 +75,20 @@ test('grade five denies before any database lookup', async () => {
   assert.equal((await authorizeGenerativeFeature(student, { grade: '5', age_group: '6-10' }, 'socratic_tutor', db)).allowed, false)
   assert.equal(calls.length, 0)
 })
+
+test('reviewer lookup failures and missing active reviewer deny', async () => {
+  for (const row of [
+    { data: null, error: { message: 'reviewer table unavailable' } },
+    { data: [], error: null },
+    { data: [{ ...reviewer, user_id: 'another-manager' }], error: null },
+  ]) {
+    const { db } = fakeDb({ mindsteps_institution_members: row })
+    const result = await authorizeGenerativeFeature(student, profile, 'socratic_tutor', db)
+    assert.equal(result.allowed, false)
+  }
+})
+test('a policy for one system never permits another system', async () => {
+  const { db } = fakeDb()
+  const result = await authorizeGenerativeFeature(student, profile, 'independent_assessment', db)
+  assert.equal(result.allowed, false)
+})
