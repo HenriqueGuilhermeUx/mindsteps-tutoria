@@ -20,6 +20,12 @@ test('school AI approvals HTTP route requires JWT and validates request before D
     const url = `http://127.0.0.1:${address.port}/api/institutions/manage/11111111-1111-4111-8111-111111111111/students/22222222-2222-4222-8222-222222222222/ai-approvals`
     const unauthenticated = await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ systemKey: 'socratic_tutor', decision: 'approved', reason: 'Valid reason' }) })
     assert.equal(unauthenticated.status, 401)
+    for (const endpoint of [url, `${url}/history`]) {
+      const anonymousRead = await fetch(endpoint)
+      assert.equal(anonymousRead.status, 401)
+      const malformedRead = await fetch(endpoint, { headers: { Authorization: 'Bearer invalid' } })
+      assert.equal(malformedRead.status, 401)
+    }
     const invalidJwt = await fetch(url, { method: 'PUT', headers: { Authorization: 'Bearer invalid', 'Content-Type': 'application/json' }, body: '{}' })
     assert.equal(invalidJwt.status, 401)
     const token = jwt.sign({ userId: '33333333-3333-4333-8333-333333333333', email: 'manager@example.test' }, process.env.JWT_SECRET || 'dev-secret-change-in-production')
