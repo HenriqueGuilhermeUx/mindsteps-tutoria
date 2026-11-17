@@ -98,6 +98,14 @@ BEGIN
  IF event_count <> 2 THEN RAISE EXCEPTION 'Revoked manager changed audit history'; END IF;
 
  BEGIN
+  UPDATE public.mindsteps_ai_student_approval_events SET reason='Alteracao proibida' WHERE approval_id=v_approval_id;
+  RAISE EXCEPTION 'Audit update unexpectedly succeeded';
+ EXCEPTION WHEN raise_exception THEN
+  IF SQLERRM <> 'AI approval audit events are append-only' THEN RAISE; END IF;
+ END;
+ SELECT count(*) INTO event_count FROM public.mindsteps_ai_student_approval_events WHERE approval_id=v_approval_id;
+ IF event_count <> 2 THEN RAISE EXCEPTION 'Audit update attempt changed event count'; END IF;
+ BEGIN
   DELETE FROM public.mindsteps_ai_student_approval_events WHERE approval_id=v_approval_id;
   RAISE EXCEPTION 'Audit deletion unexpectedly succeeded';
  EXCEPTION WHEN raise_exception THEN
