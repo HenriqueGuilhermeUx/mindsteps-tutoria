@@ -28,6 +28,13 @@ test('school AI approvals HTTP route requires JWT and validates request before D
     }
     const invalidJwt = await fetch(url, { method: 'PUT', headers: { Authorization: 'Bearer invalid', 'Content-Type': 'application/json' }, body: '{}' })
     assert.equal(invalidJwt.status, 401)
+    const expiredToken = jwt.sign({ userId: '33333333-3333-4333-8333-333333333333', email: 'manager@example.test' }, process.env.JWT_SECRET || 'dev-secret-change-in-production', { expiresIn: -1 })
+    for (const endpoint of [url, `${url}/history`]) {
+      const expiredRead = await fetch(endpoint, { headers: { Authorization: `Bearer ${expiredToken}` } })
+      assert.equal(expiredRead.status, 401)
+    }
+    const expiredWrite = await fetch(url, { method: 'PUT', headers: { Authorization: `Bearer ${expiredToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ systemKey: 'socratic_tutor', decision: 'approved', reason: 'Valid reason' }) })
+    assert.equal(expiredWrite.status, 401)
     const token = jwt.sign({ userId: '33333333-3333-4333-8333-333333333333', email: 'manager@example.test' }, process.env.JWT_SECRET || 'dev-secret-change-in-production')
     for (const payload of [
       { systemKey: 'unknown_system', decision: 'approved', reason: 'Valid reason' },
