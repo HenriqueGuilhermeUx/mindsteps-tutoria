@@ -1,9 +1,18 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.SUPABASE_URL!
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY!
+const supabaseUrl = process.env.SUPABASE_URL
+// The backend must use the service role key: every table is RLS deny-all for
+// anon/authenticated (public.users included since 2026-11-25), so falling back
+// to the public anon key would silently break login and every query.
+const supabaseKey = process.env.SUPABASE_SERVICE_KEY
 
-export const supabase = createClient(supabaseUrl, supabaseKey)
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('SUPABASE_URL and SUPABASE_SERVICE_KEY are required (the anon key is not supported).')
+}
+
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: { persistSession: false, autoRefreshToken: false },
+})
 
 // Database types (UUID compatible)
 export interface User {

@@ -23,7 +23,6 @@ VITE_API_URL=https://seu-backend.railway.app
 PORT=3000
 SUPABASE_URL=sua_url_do_supabase
 SUPABASE_SERVICE_KEY=sua_chave_de_servico
-SUPABASE_ANON_KEY=sua_chave_anonima
 JWT_SECRET=seu_segredo_jwt
 OPENAI_API_KEY=sua_chave_openai
 ```
